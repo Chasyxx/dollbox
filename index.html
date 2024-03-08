@@ -1,0 +1,162 @@
+<!--
+    DOLLBOX: An Electron-based bytebeat player
+
+    This program is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation, either version 3 of the License, or (at your option) any later
+    version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+    PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with
+    this program. If not, see <https://www.gnu.org/licenses/>. 
+
+    Copyright 2024 Chase Taylor
+-->
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; connect-src 'self' https://dollchan.net/ ;script-src 'self' 'unsafe-eval'">
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="script.js"></script>
+    <title>DOLLBOX</title>
+</head>
+
+<body>
+    <div class="delete-on-load">
+        <h1 class="delete-on-load">DOLLBOX</h1>
+        Node.js <span id="node-version"></span>
+        Chromium <span id="chrome-version"></span>
+        Electron <span id="electron-version"></span>
+        <br /><br />
+    </div>
+    <p id="loading-status">(JavaScript not loaded. Please turn it on.)</p>
+    <div class="flex">
+        <div id="main-left">
+            <textarea id="code-area">t*((t&gt;&gt;12|t&gt;&gt;8)&amp;63&amp;t&gt;&gt;4)
+// DOLLBOX (not the above code) is licensed under the GNU GPL
+// Scroll sidebar for disclaimers</textarea>
+            <div id="error">No error</div>
+            <div id="t">-</div>
+            <div class="flex">
+                <span class="grow">Waveform <input type="checkbox" id="toggle-waveform" checked /></span>
+                <span class="grow">Diagram <input type="checkbox" id="toggle-diagram" /></span>
+                <span class="grow">FFT <input type="checkbox" id="toggle-fft" /></span>
+            </div>
+            <div class="controls-container"><!--
+                --><button class="control-button noright" id="rewind-button">R</button><!--
+                --><button class="control-button noright" id="reverse-button">&lt;x<span
+                        id="reverse-speed">1</span></button><!--
+                --><button class="control-button noright" id="pause-button">|</button><!--
+                --><button class="control-button noright" id="forward-button">&gt;x<span
+                        id="forward-speed">1</span></button><!--
+                    
+                --><input type="number" class="control-number" value="8000" id="samplerate" /><!--
+                -->
+                <div id="volume-container"><input id="volume-slider" type="range" min="0" max="100" value="50" /></div>
+            </div>
+            <div class="flex">
+                <select class="control-select" title="Sound range" id="range">
+                    <option selected value="regular">0 to 255</option>
+                    <option value="signed">-128 to 127</option>
+                    <option value="float">-1 to 1</option>
+                </select>
+                <select class="control-select" title="Compilation method" id="method">
+                    <option selected value="normal">Normal</option>
+                    <option value="func">Funcbeat</option>
+                </select>
+                <button class="control-button" id="lag-button"
+                    title="Disclaimer: Does not fix lag. Just Chromium's side effects.">FIX MY LAG</button>
+            </div>
+            <div id="visual-container">
+                <canvas width="512" height="256" id="waveform"></canvas><!--
+            --><canvas width="512" height="256" id="diagram" class="hide"></canvas><!--
+            --><canvas width="512" height="256" id="fft" class="hide"></canvas>
+            </div>
+        </div>
+        <div id="main-right">
+            <div id="library">
+                <div class="electron-show hide">
+                    <h1>Built-in dE library loader</h1>
+                    <header>This area loads codes from the <a href="https://dollchan.net/bytebeat/">DollChan</a> library
+                    </header>
+                    <details class="library-part">
+                        <summary class="library-head"><!--
+                    -->C compatible codes <span class="loading hide">(Loading...)</span><!--
+                    --></summary>
+                        <div id="library-classic" class="library-content"></div>
+                    </details>
+                    <details class="library-part">
+                        <summary class="library-head"><!--
+                    -->JS codes <span class="loading hide">(Loading...)</span><!--
+                    --></summary>
+                        <div id="library-compact-js" class="library-content"></div>
+                    </details>
+                    <details class="library-part">
+                        <summary class="library-head"><!--
+                    -->Large JS codes <span class="loading hide">(Loading...)</span><!--
+                    --></summary>
+                        <div id="library-big-js" class="library-content"></div>
+                    </details>
+                    <details class="library-part">
+                        <summary class="library-head"><!--
+                    -->Floatbeat codes <span class="loading hide">(Loading...)</span><!--
+                    --></summary>
+                        <div id="library-floatbeat" class="library-content"></div>
+                    </details>
+                    <details class="library-part">
+                        <summary class="library-head"><!--
+                    -->Funcbeat codes <span class="loading hide">(Loading...)</span><!--
+                    --></summary>
+                        <div id="library-funcbeat" class="library-content"></div>
+                    </details>
+                    <hr>
+                </div>
+                <h1>Dataloader</h1>
+                <header>This area handles encoded strings for quick sharing. They aren't as small as what the fileloader
+                    gives, but it's faster, and doesn't depend on Electron.</header>
+                <br />
+                <div class="flex"><button id="load-data">Load data...</button><button id="make-data">Generate
+                        data...</button></div>
+                <textarea id="data">Data goes here...</textarea>
+                <br />
+                <footer class="electron-show hide">Note: If you're saving something for later, use the fileloader
+                    below.</footer>
+                <div class="electron-show hide">
+                    <hr>
+                    <h1>Fileloader</h1>
+                    <header>This area handles file saving and loading.<br />It only really works if you got this running
+                        in Electron.</header>
+                    <button id="button-open">Open a File</button>
+                    <strong id="open-error"></strong>
+                    <button id="button-save">Save a File</button>
+                </div>
+                <hr />
+                <h1>GNU GPL disclaimers</h1>
+                <details>
+                    <summary><!--
+                    -->Warranty disclaimer<!--
+                    --></summary>
+                    <article>THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.</article>
+                </details>
+                <details>
+                    <summary><!--
+                    -->Liability disclaimer<!--
+                    --></summary>
+                    <article>IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</article>
+                </details>
+            </div>
+        </div>
+    </div>
+    <br />
+    </div>
+    <div id="safe" class="hide"></div>
+</body>
+
+</html>

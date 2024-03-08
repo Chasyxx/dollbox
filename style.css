@@ -1,0 +1,232 @@
+/*
+    DOLLBOX: An Electron-based bytebeat player
+
+    This program is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free Software
+    Foundation, either version 3 of the License, or (at your option) any later
+    version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+    PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along with
+    this program. If not, see <https://www.gnu.org/licenses/>. 
+
+	Copyright 2024 Chase Taylor
+*/
+
+@font-face {
+	font-family: tomo;
+	src: url('tomo.ttf');
+}
+
+body {
+	font-family: tomo, 'Courier New', Courier, monospace;
+	background-color: black;
+	color: white;
+	overflow: hidden;
+}
+
+.flex {
+	display: flex;
+	flex-direction: row;
+}
+
+#main-left {
+	width: 530px;
+	min-width: 530px;
+	height: calc(100vh - 12px);
+	display: inline-block;
+	margin: 4px;
+	margin-right: 8px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+#main-right {
+	width: calc(100% - 530px);
+	max-width: calc(100% - 530px);
+	display: inline-block;
+}
+
+#io,
+#library {
+	width: calc(100% - 24px);
+	max-width: calc(100% - 24px);
+	margin: 4px;
+	border: 4px ridge white;
+	padding: 4pt;
+	height: calc(100vh - 40px);
+	overflow-y: scroll;
+	word-wrap: break-word;
+	font-size: small;
+}
+
+#term {
+	margin: 4px;
+	width: 50%;
+	border: 4px ridge white;
+	padding: 4pt;
+}
+
+#keyboardpad {
+	margin: 4px;
+	width: 50%;
+	border: 4px ridge white;
+	padding: 4pt
+}
+
+#waveform,
+#diagram,
+#fft {
+	border: 1px solid white;
+	padding: 0;
+	margin: 0;
+}
+
+#waveform {
+	background-color: blue;
+}
+
+#diagram {
+	background-color: red;
+}
+
+#fft {
+	background-color: lime;
+}
+
+#code-area {
+	background-image: linear-gradient(to top, #0f1f3f, #1f3f8f);
+	width: 508px;
+	max-width: 508px;
+	padding: 2px;
+	height: 256px;
+	resize: vertical;
+	color: white;
+	overflow-x: auto;
+	white-space: nowrap;
+}
+
+#data {
+	background-image: linear-gradient(to top, #0f1f3f, #1f3f8f);
+	width: 256px;
+	padding: 2px;
+	height: 256px;
+	resize: both;
+	color: white;
+	word-wrap: break-word;
+}
+
+.library-codebutton {
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	font-family: tomo, 'Courier New', Courier, monospace;
+	font-size: 8pt;
+	color: white;
+	margin-bottom: 0pt;
+}
+
+.control-select {
+	background-color: #0f1f3f;
+}
+
+.controls-container {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	padding: 0;
+	margin: 0;
+}
+
+.control-button,
+.control-select {
+	margin: 0;
+	height: 17pt;
+	width: 32pt;
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	color: white;
+	display: inline-block;
+	flex-grow: 1;
+	border: 1px solid white;
+	align-self: stretch;
+}
+
+.control-number {
+	margin: 0;
+	padding: 0;
+	height: 16pt;
+	width: 32pt;
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	color: white;
+	display: inline-block;
+	flex-grow: 1;
+	border: 1px solid white;
+	align-self: stretch;
+}
+
+#volume-container {
+	margin: 0;
+	padding: 0;
+	height: 16pt;
+	width: 32pt;
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	color: white;
+	display: inline-block;
+	flex-grow: 1;
+	border: 1px solid white;
+	align-self: stretch;
+}
+
+.noright {
+	border-right: none;
+}
+
+.control-button:hover,
+.control-select:hover {
+	background-image: linear-gradient(to bottom, #1f3f7f, #3f7fff);
+}
+
+.control-button:active {
+	background-image: linear-gradient(to bottom, #3f7fff, #7fcfff);
+	color: black;
+}
+
+/* .control-container {
+	display: flex;
+} */
+
+#volume-slider {
+	width: 64px;
+}
+
+#volume-container {
+	width: 64px;
+	flex-grow: 0;
+}
+
+.hide {
+	display: none !important;
+}
+
+#error {
+	color: black;
+	background-color: azure;
+}
+
+#t {
+	background-color: blue;
+	color: azure;
+}
+
+.grow {
+	flex-grow: 1;
+}
+
+.code {
+	color: #dfaf14 !important;
+}
+
+.code:hover {
+	color: #b014df !important;
+}

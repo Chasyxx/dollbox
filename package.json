@@ -1,0 +1,19 @@
+{
+  "name": "dollbox",
+  "version": "0.1.0",
+  "description": "Bytebeat player for Electron",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "Chasyxx",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "electron": "^29.1.0"
+  },
+  "dependencies": {
+    "electron": "^29.1.0",
+    "pako": "^2.1.0"
+  }
+}
