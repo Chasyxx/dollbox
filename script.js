@@ -405,7 +405,7 @@ class BytebeatSystem {
                     article.appendChild(list);
                     fetch(`https://dollchan.net/bytebeat/library/${path}.json`, { cache: 'no-cache' }).then(data => {
                         if (!data.ok) {
-                            loading.remove();
+                            loading.classList.add('hide');
                             header.removeAttribute('loaded');
                             list.remove();
                             let error = document.createElement('p');
@@ -421,7 +421,7 @@ class BytebeatSystem {
                             loading.remove();
                         });
                     }).catch(reason => {
-                        loading.remove();
+                        loading.classList.add('hide');
                         header.removeAttribute('loaded');
                         list.remove();
                         let error = document.createElement('p');
@@ -478,6 +478,8 @@ class BytebeatSystem {
     }
 
     loadCodeBase(code, SR, range, method) {
+        range = String(range).replace(/\W/g,'');
+        method = String(method).replace(/\W/g,'');
         this.setSampleRate(SR);
         this.elements.codeArea.value = code;
         this.elements.soundRangeSelect.value = range;
