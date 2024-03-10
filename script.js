@@ -118,7 +118,15 @@ class BytebeatSystem {
     async init() {
         await this.initAudio();
         this.initElements();
+        this.initData();
         requestAnimationFrame(_ => (this.renderer()));
+    }
+
+    initData() {
+        if(window.location.hash && window.location.hash !== '#') {
+            this.elements.data.value = window.location.hash.replace('#','');
+            this.loadData();
+        }
     }
 
     onVisualSelectChange(v) {
@@ -289,6 +297,7 @@ class BytebeatSystem {
         D.value += `${this.elements.soundRangeSelect.value}:`;
         D.value += `${this.elements.compilationModeSelect.value}:`;
         D.value += btoa(this.elements.codeArea.value);
+        window.location.hash = D.value;
     }
 
     loadData() {
