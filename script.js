@@ -123,8 +123,8 @@ class BytebeatSystem {
     }
 
     initData() {
-        if(window.location.hash && window.location.hash !== '#') {
-            this.elements.data.value = window.location.hash.replace('#','');
+        if (window.location.hash && window.location.hash !== '#') {
+            this.elements.data.value = window.location.hash.replace('#', '');
             this.loadData();
         }
     }
@@ -185,11 +185,17 @@ class BytebeatSystem {
         return document.getElementById('safe').innerHTML;
     }
 
+    static code2code(code) {
+        if (Array.isArray(code))
+            return code.reduce((a, b) => a + "\n" + b);
+        return code;
+    }
+
     async generateEntry(entry, treeElem) {
         let elem = document.createElement('li');
         treeElem.appendChild(elem);
         if (entry.stereo) {
-            elem.innerText = "Stereo tracks are not yet supported\n";
+            elem.innerHTML = '<span class="warning" title="Stereo tracks won\'t currently work">Unsupported;</span> ';
         }
         // Name, author
         let res = ""
@@ -219,24 +225,22 @@ class BytebeatSystem {
             elem.appendChild(document.createElement('br'));
         }
 
-        function addCodeLink(text, code, SR, mode) {
+        function addCodeLink(text, code, SR, mode, override) {
             let container = document.createElement('span');
             if (text) {
                 if (text) container.innerText = `${text}: `;
             }
             let codeLink = document.createElement('a');
             codeLink.href = "javascript:void(0);"; // The URL will be refused of evalulation, but it'll do nothing anyway
-            if (Array.isArray(code)) {
-                code = code.reduce((a, b) => a + "\n" + b);
-            }
+            code = BytebeatSystem.code2code(code);
             codeLink.setAttribute('code', code);
             codeLink.setAttribute('rate', SR);
-            codeLink.setAttribute('mode', entry.mode ?? "Bytebeat");
+            codeLink.setAttribute('mode', mode ?? "Bytebeat");
             codeLink.addEventListener('click', function () {
                 bytebeat.loadCode(this);
             })
             codeLink.classList.add("code");
-            codeLink.innerText = code;
+            codeLink.innerText = override??code;
             container.appendChild(codeLink);
             elem.appendChild(container);
             elem.appendChild(document.createElement('br'));
@@ -248,7 +252,7 @@ class BytebeatSystem {
         }
 
         if (entry.codeOriginal) {
-            addCodeLink(entry.codeMinified ? 'Original' : '', entry.codeOriginal, entry.sampleRate ?? 8000, entry.mode ?? "Bytebeat")
+            addCodeLink(entry.codeMinified ? 'Original' : '', entry.codeOriginal, entry.sampleRate ?? 8000, entry.mode ?? "Bytebeat", entry.codeMinified?`${BytebeatSystem.code2code(entry.codeOriginal).length - BytebeatSystem.code2code(entry.codeMinified).length}c more`:null)
         }
 
         if (entry.file) {
@@ -282,8 +286,19 @@ class BytebeatSystem {
         }
 
         if (entry.children) {
+            let hide;
             let tree = document.createElement('ul');
-            elem.appendChild(tree);
+            if (entry.children.length > 10) {
+                hide = document.createElement('details');
+                hide.classList.add('library-hidden');
+                let hideText = document.createElement('summary');
+                hideText.innerText = "Many entries; click to show";
+                hide.appendChild(hideText); // hideText &
+                hide.appendChild(tree);     // tree -> hide ->
+                elem.appendChild(hide);     // elem
+            } else {
+                elem.appendChild(tree);     // tree -> elem
+            }
             for (const A of entry.children) {
                 this.generateEntry(A, tree);
             }
@@ -487,8 +502,8 @@ class BytebeatSystem {
     }
 
     loadCodeBase(code, SR, range, method) {
-        range = String(range).replace(/\W/g,'');
-        method = String(method).replace(/\W/g,'');
+        range = String(range).replace(/\W/g, '');
+        method = String(method).replace(/\W/g, '');
         this.setSampleRate(SR);
         this.elements.codeArea.value = code;
         this.elements.soundRangeSelect.value = range;
