@@ -94,34 +94,34 @@ class BytebeatSystem {
             if (!hasNaN) diagramData[pixelIdx] = R;
             if (!isNaN(L)) diagramData[pixelIdx + 1] = L;
             if (!isNaN(R)) diagramData[pixelIdx + 2] = R;
-            diagramData[pixelIdx + 3] = 255;
-            for (let i = 0; i < 256; i++) {
-                const P = (i * 512 + waveformIdx) << 2;
-                waveformData[P] = hasNaN ? 100 : 0;
-                waveformData[P + 1] = 0;
-                waveformData[P + 2] = 0;
-                waveformData[P + 3] = 255;
+            for(let i = 0; i < 256; i++) {
+                const P = (i*512+waveformIdx)<<2;
+                waveformData[P] = hasNaN?100:0;
+                waveformData[P+1] =
+                waveformData[P+2] = 0;
+                waveformData[P+3] = 255;
             }
+            diagramData[pixelIdx + 3] = 255;
             if (!isNaN(L)) {
                 const lowestL = Math.min(255 - this.waveformLast[0], 255 - L);
                 const highestL = Math.max(255 - this.waveformLast[0], 255 - L);
                 const highlightPixelL = ((255 - L) * 512 + waveformIdx) << 2;
-                waveformData[highlightPixelL + 1] = 255;
                 for (let i = lowestL; i < highestL; i++) {
                     waveformData[(i * 512 + waveformIdx) * 4 + 1] = 128;
                 }
+                waveformData[highlightPixelL + 1] = 255;
             }
             if (!isNaN(R)) {
                 const lowestR = Math.min(255 - this.waveformLast[1], 255 - R);
                 const highestR = Math.max(255 - this.waveformLast[1], 255 - R);
                 const highlightPixelR = ((255 - R) * 512 + waveformIdx) << 2;
-                waveformData[highlightPixelR] =
-                    waveformData[highlightPixelR + 2] = 255;
                 for (let i = lowestR; i < highestR; i++) {
                     const P = (i * 512 + waveformIdx) << 2;
                     waveformData[P] =
                         waveformData[P + 2] = 128;
                 }
+                waveformData[highlightPixelR] =
+                    waveformData[highlightPixelR + 2] = 255;
             }
             this.waveformLast = [isNaN(L) ? this.waveformLast[0] : L, isNaN(R) ? this.waveformLast[1] : R];
         }
@@ -241,7 +241,7 @@ class BytebeatSystem {
         if (entry.sampleRate && entry.sampleRate !== 8000) res += ` ${entry.sampleRate}Hz`;
         if (entry.stereo) res += ' <span class="stereo-marker1">Ste</span><span class="stereo-marker2">reo</span>';
         if (entry.mode && entry.mode !== 'Bytebeat') {
-            res += ` <span class="mode-marker-${entry.mode.toLowerCase().replace(/\s/g,'-')}">${this.safe(entry.mode)}</span>`;
+            res += ` <span class="mode-marker-${entry.mode.toLowerCase().replace(/\s/g, '-')}">${this.safe(entry.mode)}</span>`;
         }
         if (entry.description) res += ` "${this.safe(entry.description)}"`;
 
@@ -616,3 +616,4 @@ async function M() {
 if (document.readyState == 'loading') {
     document.addEventListener('DOMContentLoaded', M);
 } else M();
+

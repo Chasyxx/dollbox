@@ -102,7 +102,7 @@ class AudioProcessor extends AudioWorkletProcessor {
                     }
                     this.lastCalculation[idx] = isNaN(LR[idx]) ? this.lastCalculation[idx] : LR[idx];
                     this.lastSample[idx] = getAudioValue(this.lastCalculation[idx]);
-                    VLR[idx] = this.lastSample[idx] * 127.5 + 128 & 255;
+                    VLR[idx] = isNaN(LR[idx]) ? NaN : this.lastSample[idx] * 127.5 + 128 & 255;
                 }
                 this.visualiserBuffer.push({ t: Math.floor(this.t), L: VLR[0], R: VLR[1] });
                 if (this.visualiserBuffer.length >= (512 * Math.min(1, this.samplerate / 8000))) {
