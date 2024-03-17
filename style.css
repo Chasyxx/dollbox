@@ -126,8 +126,24 @@ body {
 	margin-bottom: 0pt;
 }
 
-.library-hidden>summary {
+.library-hidden>summary, .stereo-marker1 {
 	color: #4FFF4F;
+}
+
+.stereo-marker2 {
+	color: #FF4FFF;
+}
+
+.mode-marker-signed-bytebeat {
+	color:#3f7fff;
+}
+
+.mode-marker-floatbeat {
+	color:#0f3fff;
+}
+
+.mode-marker-funcbeat {
+	color:#3fff3f;
 }
 
 .control-select {

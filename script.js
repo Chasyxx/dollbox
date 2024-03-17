@@ -47,7 +47,7 @@ class BytebeatSystem {
             t: null
         };
         this.visualiserPoints = [];
-        this.wafeformLast = 0;
+        this.waveformLast = [0, 0];
     }
 
     static mod(a, b) {
@@ -58,47 +58,76 @@ class BytebeatSystem {
         let waveformCtx = this.elements.canvasWaveform.getContext('2d');
         let diagramCtx = this.elements.canvasDiagram.getContext('2d', { willReadFrequently: true });
         let frequencyCtx = this.elements.canvasFFT.getContext('2d');
+        const waveformImageData = waveformCtx.getImageData(0, 0, 512, 256);
         const diagramImageData = diagramCtx.getImageData(0, 0, 512, 256);
-        const { data } = diagramImageData;
-        if (this.visualiserPoints.length > 0 && this.SR >= 8000) {
-            waveformCtx.fillStyle = "#000000";
-            waveformCtx.fillRect(0, 0, 512, 256);
-            waveformCtx.fillStyle = "#ffffff";
-        }
-        // console.log(this.visualiserPoints.length);
+        const frequencyImageData = frequencyCtx.getImageData(0, 0, 512, 256);
+        const { data: waveformData } = waveformImageData;
+        const { data: diagramData } = diagramImageData;
+        const { data: frequencyData } = frequencyImageData;
+        // if (this.visualiserPoints.length > 0 && this.SR >= 8000) {
+        //     for(let x=0; x<512; x++) {
+        //         for(let y=0; y<512; y++) {
+        //             let P = (y*512+x)<<2;
+        //             waveformData[P] =
+        //             waveformData[P+1] =
+        //             waveformData[P+2] = 0;
+        //             waveformData[P+3] = 255;
+        //         }
+        //     }
+        // }
         while (this.visualiserPoints.length > 0) {
             let point = this.visualiserPoints.pop();
-            let t = point.t;
-            let o = point.o;
+            const { t, L, R } = point;
             let diagramIdx = BytebeatSystem.mod(t, 256 * 512);
             let waveformIdx = BytebeatSystem.mod(t, 512);
             let diagramY = diagramIdx & 255;
             let diagramX = diagramIdx >> 8 & 511;
             let pixelIdx = (diagramX + (diagramY * 512)) << 2;
-            if (isNaN(o)) {
-                data[pixelIdx] = 100;
-                data[pixelIdx + 1] = data[pixelIdx + 2] = 0;
+            const hasNaN = isNaN(L) || isNaN(R);
+            diagramData[pixelIdx] =
+                diagramData[pixelIdx + 1] =
+                diagramData[pixelIdx + 2] = 0;
+            if (hasNaN) {
+                diagramData[pixelIdx] = 100;
+                diagramData[pixelIdx + 1] = diagramData[pixelIdx + 2] = 0;
             }
-            else data[pixelIdx] = data[pixelIdx + 1] = data[pixelIdx + 2] = o;
-            data[pixelIdx + 3] = 255;
-            if (isNaN(o)) {
-                waveformCtx.fillStyle = "#640000";
-                waveformCtx.fillRect(waveformIdx, 0, 1, 256);
-                waveformCtx.fillStyle = "#ffffff";
-            } else {
-                const lowest = Math.min(255 - this.wafeformLast, 255 - o);
-                const height = Math.max(255 - this.wafeformLast, 255 - o) - lowest + 1;
-                if (this.SR < 8000) {
-                    waveformCtx.fillStyle = "#000000";
-                    waveformCtx.fillRect(waveformIdx, 0, 1, 256);
-                    waveformCtx.fillStyle = "#ffffff";
+            if (!hasNaN) diagramData[pixelIdx] = R;
+            if (!isNaN(L)) diagramData[pixelIdx + 1] = L;
+            if (!isNaN(R)) diagramData[pixelIdx + 2] = R;
+            diagramData[pixelIdx + 3] = 255;
+            for (let i = 0; i < 256; i++) {
+                const P = (i * 512 + waveformIdx) << 2;
+                waveformData[P] = hasNaN ? 100 : 0;
+                waveformData[P + 1] = 0;
+                waveformData[P + 2] = 0;
+                waveformData[P + 3] = 255;
+            }
+            if (!isNaN(L)) {
+                const lowestL = Math.min(255 - this.waveformLast[0], 255 - L);
+                const highestL = Math.max(255 - this.waveformLast[0], 255 - L);
+                const highlightPixelL = ((255 - L) * 512 + waveformIdx) << 2;
+                waveformData[highlightPixelL + 1] = 255;
+                for (let i = lowestL; i < highestL; i++) {
+                    waveformData[(i * 512 + waveformIdx) * 4 + 1] = 128;
                 }
-                waveformCtx.fillRect(waveformIdx, lowest, 1, height);
-                this.wafeformLast = o;
             }
+            if (!isNaN(R)) {
+                const lowestR = Math.min(255 - this.waveformLast[1], 255 - R);
+                const highestR = Math.max(255 - this.waveformLast[1], 255 - R);
+                const highlightPixelR = ((255 - R) * 512 + waveformIdx) << 2;
+                waveformData[highlightPixelR] =
+                    waveformData[highlightPixelR + 2] = 255;
+                for (let i = lowestR; i < highestR; i++) {
+                    const P = (i * 512 + waveformIdx) << 2;
+                    waveformData[P] =
+                        waveformData[P + 2] = 128;
+                }
+            }
+            this.waveformLast = [isNaN(L) ? this.waveformLast[0] : L, isNaN(R) ? this.waveformLast[1] : R];
         }
         // console.log(diagramImageData);
         diagramCtx.putImageData(diagramImageData, 0, 0);
+        waveformCtx.putImageData(waveformImageData, 0, 0);
         const arr = new Uint8Array(this.analyserNode.frequencyBinCount);
         frequencyCtx.fillStyle = "#000000";
         frequencyCtx.fillRect(0, 0, 512, 256);
@@ -194,9 +223,6 @@ class BytebeatSystem {
     async generateEntry(entry, treeElem) {
         let elem = document.createElement('li');
         treeElem.appendChild(elem);
-        if (entry.stereo) {
-            elem.innerHTML = '<span class="warning" title="Stereo tracks won\'t currently work">Unsupported;</span> ';
-        }
         // Name, author
         let res = ""
         if (entry.name) {
@@ -213,8 +239,9 @@ class BytebeatSystem {
 
         if (entry.sampleRate && entry.sampleRate !== 8000 || (entry.mode && entry.mode !== 'Bytebeat')) res += " @"
         if (entry.sampleRate && entry.sampleRate !== 8000) res += ` ${entry.sampleRate}Hz`;
+        if (entry.stereo) res += ' <span class="stereo-marker1">Ste</span><span class="stereo-marker2">reo</span>';
         if (entry.mode && entry.mode !== 'Bytebeat') {
-            res += ` ${entry.mode}`;
+            res += ` <span class="mode-marker-${entry.mode.toLowerCase().replace(/\s/g,'-')}">${this.safe(entry.mode)}</span>`;
         }
         if (entry.description) res += ` "${this.safe(entry.description)}"`;
 
@@ -240,7 +267,7 @@ class BytebeatSystem {
                 bytebeat.loadCode(this);
             })
             codeLink.classList.add("code");
-            codeLink.innerText = override??code;
+            codeLink.innerText = override ?? code;
             container.appendChild(codeLink);
             elem.appendChild(container);
             elem.appendChild(document.createElement('br'));
@@ -252,7 +279,7 @@ class BytebeatSystem {
         }
 
         if (entry.codeOriginal) {
-            addCodeLink(entry.codeMinified ? 'Original' : '', entry.codeOriginal, entry.sampleRate ?? 8000, entry.mode ?? "Bytebeat", entry.codeMinified?`${BytebeatSystem.code2code(entry.codeOriginal).length - BytebeatSystem.code2code(entry.codeMinified).length}c more`:null)
+            addCodeLink(entry.codeMinified ? 'Original' : '', entry.codeOriginal, entry.sampleRate ?? 8000, entry.mode ?? "Bytebeat", entry.codeMinified ? `${BytebeatSystem.code2code(entry.codeOriginal).length - BytebeatSystem.code2code(entry.codeMinified).length}c more` : null)
         }
 
         if (entry.file) {
@@ -462,7 +489,7 @@ class BytebeatSystem {
     async initAudio() {
         this.audioContext = new AudioContext({ sampleRate: 48000 });
         await this.audioContext.audioWorklet.addModule('sound-gen.js');
-        this.audioNode = new AudioWorkletNode(this.audioContext, 'sound-gen', { outputChannelCount: [1] });
+        this.audioNode = new AudioWorkletNode(this.audioContext, 'sound-gen', { outputChannelCount: [2] });
         this.audioNode.port.addEventListener('message', e => this.receiveData(e.data));
         this.audioNode.port.start();
         this.analyserNode = new AnalyserNode(this.audioContext, { fftSize: 1024 });

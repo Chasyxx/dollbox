@@ -21,8 +21,8 @@ class AudioProcessor extends AudioWorkletProcessor {
         this.sampleContextRate = sampleRate;
         this.samplerate = 8000;
         this.visualiserBuffer = [];
-        this.lastSample = 0;
-        this.lastCalculation = 0;
+        this.lastSample = [0, 0];
+        this.lastCalculation = [0, 0];
         this.func = null;
         this.speed = 1;
         this.soundMode = 'regular';
@@ -81,20 +81,30 @@ class AudioProcessor extends AudioWorkletProcessor {
         };
         for (let i = 0; i < L; i++) {
             this.subt++;
-            let o = NaN;
+            let o = null;
             if (this.subt >= Math.max(1, (this.sampleContextRate / this.samplerate / Math.abs(this.speed)))) {
                 this.subt -= Math.max(1, (this.sampleContextRate / this.samplerate / Math.abs(this.speed)));
                 let t = Math.floor(this.t);
                 try {
                     if (this.compilationMode == 'func')
-                        o = +this.func(t / this.samplerate, this.samplerate, t);
-                    else o = +this.func(t);
+                        o = this.func(t / this.samplerate, this.samplerate, t);
+                    else o = this.func(t);
                 } catch (e) {
                     runtimeFail = { body: e.message, t };
                 }
-                this.lastCalculation = isNaN(o) ? this.lastCalculation : o;
-                this.lastSample = getAudioValue(this.lastCalculation);
-                this.visualiserBuffer.push({ t: Math.floor(this.t), o: isNaN(o) ? NaN : this.lastSample * 127.5 + 128 & 255 });
+                let LR = Array.isArray(o) ? [o[0], o[1]] : [o, o];
+                let VLR = [0, 0];
+                for (let idx = 0; idx < 2; idx++) {
+                    try {
+                        LR[idx] = +LR[idx];
+                    } catch {
+                        LR[idx] = NaN;
+                    }
+                    this.lastCalculation[idx] = isNaN(LR[idx]) ? this.lastCalculation[idx] : LR[idx];
+                    this.lastSample[idx] = getAudioValue(this.lastCalculation[idx]);
+                    VLR[idx] = this.lastSample[idx] * 127.5 + 128 & 255;
+                }
+                this.visualiserBuffer.push({ t: Math.floor(this.t), L: VLR[0], R: VLR[1] });
                 if (this.visualiserBuffer.length >= (512 * Math.min(1, this.samplerate / 8000))) {
                     this.sendData({ samples: this.visualiserBuffer, runtimeFail, t });
                     runtimeFail = undefined;
@@ -102,7 +112,8 @@ class AudioProcessor extends AudioWorkletProcessor {
                 }
                 this.t += Math.max(1, this.samplerate / this.sampleContextRate) * this.speed;
             }
-            outputs[0][0][i] = this.lastSample;
+            outputs[0][0][i] = this.lastSample[0];
+            outputs[0][1][i] = this.lastSample[1];
         }
         if (runtimeFail) this.sendData(runtimeFail);
         return true;
@@ -136,14 +147,14 @@ class AudioProcessor extends AudioWorkletProcessor {
         try {
             if (this.compilationMode == 'func' && succeded) {
                 this.func = this.func();
-                if(typeof this.func !== 'function') { // Stop da lag!
-                    this.func = t=>t;
+                if (typeof this.func !== 'function') { // Stop da lag!
+                    this.func = t => t;
                     this.sendData({ runtimeFail: { body: "Funcbeat expression did not return a function", t: 0 } })
                 }
             }
             this.func(0);
         } catch (e) {
-            this.sendData({ runtimeFail: { body: e.message??e, t: 0 } })
+            this.sendData({ runtimeFail: { body: e.message ?? e, t: 0 } })
         }
     }
 
