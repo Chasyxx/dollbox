@@ -14,7 +14,9 @@
 
 // Copyright 2024, 2025 Chase Taylor
 
-export {};
+// @ts-ignore no type for pako.
+import pako from './assets/pako.esm.mjs';
+import { invoke } from '@tauri-apps/api/core';
 
 type visualiserPoint = {
   t: number,
@@ -86,8 +88,10 @@ class BytebeatSystem {
         soundRangeSelect: null | HTMLSelectElement,
         compilationModeSelect: null | HTMLSelectElement,
         saveButton: null | HTMLButtonElement,
+        saver: null | HTMLAnchorElement,
         loadError: null | HTMLSpanElement,
         loadButton: null | HTMLButtonElement,
+        loader: null | HTMLInputElement,
         dataCreate: null | HTMLButtonElement,
         dataLoad: null | HTMLButtonElement,
         data: null | HTMLTextAreaElement,
@@ -119,8 +123,10 @@ class BytebeatSystem {
             soundRangeSelect: null,
             compilationModeSelect: null,
             saveButton: null,
+            saver: null,
             loadError: null,
             loadButton: null,
+            loader: null,
             dataCreate: null,
             dataLoad: null,
             data: null,
@@ -273,13 +279,16 @@ class BytebeatSystem {
         this.elements.volumeSlider = document.getElementById('volume-slider') as typeof this.elements.volumeSlider;
         this.elements.soundRangeSelect = document.getElementById('range') as typeof this.elements.soundRangeSelect;
         this.elements.compilationModeSelect = document.getElementById('method') as typeof this.elements.compilationModeSelect;
+        this.elements.saver = document.getElementById('fileloader-saver') as typeof this.elements.saver;
         this.elements.saveButton = document.getElementById('button-save') as typeof this.elements.saveButton;
         this.elements.loadError = document.getElementById('open-error') as typeof this.elements.loadError;
+        this.elements.loader = document.getElementById('fileloader-opener') as typeof this.elements.loader;
         this.elements.loadButton = document.getElementById('button-open') as typeof this.elements.loadButton;
         this.elements.dataCreate = document.getElementById('make-data') as typeof this.elements.dataCreate;
         this.elements.dataLoad = document.getElementById('load-data') as typeof this.elements.dataLoad;
         this.elements.data = document.getElementById('data') as typeof this.elements.data;
         this.elements.t = document.getElementById('t') as typeof this.elements.t;
+        console.log("Element list",this.elements);
     }
 
     safe(a: string) {
@@ -514,6 +523,31 @@ class BytebeatSystem {
         // this.elements.saveButton.addEventListener('click', async () => {
         //     await window.elecAPI.save(this.elements.codeArea.value, this.SR, this.elements.soundRangeSelect.value, this.elements.compilationModeSelect.value);
         // })
+
+        this.elements.saveButton!.addEventListener('click',async()=>{
+            type dollboxFileData = {
+                samplerate: number,
+                range: soundRange,
+                method: compilationMethod,
+                code: string,
+                pcms: [],
+                dollbox: "030"
+            };
+            const object: dollboxFileData = {
+                samplerate: this.SR,
+                range: this.elements.soundRangeSelect!.value as soundRange,
+                method: this.elements.compilationModeSelect!.value as compilationMethod,
+                code: this.elements.codeArea!.value,
+                pcms: [],
+                dollbox: "030"
+            };
+            const compressed: Uint8Array = pako.deflate(JSON.stringify(object));
+            // pull up DA DIALOG.
+            invoke('save_file',{ data: compressed });
+            // if(this.elements.saver!.href) URL.revokeObjectURL(this.elements.saver!.href);
+            // //@ts-ignore it's an arraybuffer dude.
+            // this.elements.saver!.href = URL.createObjectURL(new Blob([compressed], { type: "application/octet-stream" }));
+        })
 
         let libraries = document.getElementsByClassName('library-part');
         for (let i = 0; i < libraries.length; i++) {
