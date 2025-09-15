@@ -1,13 +1,24 @@
 # DOLLBOX
-This is a bytebeat player built for Electron. The idea is so you can have a working JavaScript player even when offline. I've tested and limited functionality works outside of Electron, which you can access at <https://chasyxx.github.io/dollbox>. If you're planning to develop for the program, I highly reccomend you get this to work in Electron as below, to make sure you don't accidentially break any of the features that work there.
+This is a standalone bytebeat player built on Tauri.
+The idea is so you can have a working JavaScript player even when offline.
 
-## Running the electtron build
-1. Clone the repo: `git clone https://github.com/Chasyxx/dollbox.git` (and change in: `cd dollbox`)
-2. `npm i --save-dev`. This will install the needed NPM packages (`pako` and `electron`).
-3. `npm start`. If all is well, you'll get a browser window to open up, and the fileloader and "built-in dE library loader" will be visible.
+> [!NOTE]
+>
+> Unlike older Electron versions that worked in-browser, 
+> versions From 0.3.0 on use Tauri and TypeScript.
+> There is no framework or bundler at the moment.
 
-If you don't have an npm command, you need to install Node.JS: <https://nodejs.org/>
+## Running from the source code
 
-If you don't have Electron, get that too: <https://www.electronjs.org/>
+### Make sure you have Tauri!
+You can find a quickstart guide at https://v2.tauri.app/start/.
 
-As for why the library and file loaders don't show up outside of Electron, a CORS error will cause the library's attempt at loading the [Dollchan](https://dollchan.net/bytebeat/) library to fail, and for the fileloader, a browser can't mess with files on your local system (and if it could, it wouldn't let it happen.)
+I personally use [Deno](https://deno.com/) and created this project with the Deno template.
+Make sure to get that if you don't have it.
+
+Run `deno add -D npm:@tauri-apps/cli@latest` to get Tauri (At lest, this is what I did).
+
+### Instructions
+1. Make sure your terminal is within whatever folder you cloned the repo to.
+
+2. `deno task tauri dev`

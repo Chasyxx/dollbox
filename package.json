@@ -1,19 +1,24 @@
 {
   "name": "dollbox",
-  "version": "0.2.1",
+  "private": true,
+  "version": "0.3.0",
   "description": "Standalone bytebeat player app",
-  "main": "main.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
   },
   "author": "Chasyxx",
   "license": "AGPL-3.0-or-later",
-  "devDependencies": {
-    "electron": "^29.1.0"
-  },
   "dependencies": {
-    "electron": "^29.1.0",
-    "pako": "^2.1.0"
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.4",
+    "vite": "^6.0.3",
+    "typescript": "~5.6.2"
   }
 }
