@@ -14,7 +14,10 @@
 
 // Copyright 2024, 2025 Chase Taylor
 
-export {};
+// @ts-ignore no type for pako.
+import pako from './assets/pako.esm.mjs';
+import { invoke } from '@tauri-apps/api/core'; // for file saving
+import { listen } from '@tauri-apps/api/event'; // for file loading
 
 type visualiserPoint = {
   t: number,
@@ -62,6 +65,15 @@ type libraryEntry = {
   children?: libraryEntry[];
 };
 
+type dollboxFileData = {
+    samplerate: number,
+    range: soundRange,
+    method: compilationMethod,
+    code: string,
+    pcms: [],
+    dollbox: "030a"
+};
+
 class BytebeatSystem {
     SR: number;
     audioNode: AudioWorkletNode | null;
@@ -86,8 +98,10 @@ class BytebeatSystem {
         soundRangeSelect: null | HTMLSelectElement,
         compilationModeSelect: null | HTMLSelectElement,
         saveButton: null | HTMLButtonElement,
+        saver: null | HTMLAnchorElement,
         loadError: null | HTMLSpanElement,
         loadButton: null | HTMLButtonElement,
+        loader: null | HTMLInputElement,
         dataCreate: null | HTMLButtonElement,
         dataLoad: null | HTMLButtonElement,
         data: null | HTMLTextAreaElement,
@@ -119,8 +133,10 @@ class BytebeatSystem {
             soundRangeSelect: null,
             compilationModeSelect: null,
             saveButton: null,
+            saver: null,
             loadError: null,
             loadButton: null,
+            loader: null,
             dataCreate: null,
             dataLoad: null,
             data: null,
@@ -273,13 +289,16 @@ class BytebeatSystem {
         this.elements.volumeSlider = document.getElementById('volume-slider') as typeof this.elements.volumeSlider;
         this.elements.soundRangeSelect = document.getElementById('range') as typeof this.elements.soundRangeSelect;
         this.elements.compilationModeSelect = document.getElementById('method') as typeof this.elements.compilationModeSelect;
+        this.elements.saver = document.getElementById('fileloader-saver') as typeof this.elements.saver;
         this.elements.saveButton = document.getElementById('button-save') as typeof this.elements.saveButton;
         this.elements.loadError = document.getElementById('open-error') as typeof this.elements.loadError;
+        this.elements.loader = document.getElementById('fileloader-opener') as typeof this.elements.loader;
         this.elements.loadButton = document.getElementById('button-open') as typeof this.elements.loadButton;
         this.elements.dataCreate = document.getElementById('make-data') as typeof this.elements.dataCreate;
         this.elements.dataLoad = document.getElementById('load-data') as typeof this.elements.dataLoad;
         this.elements.data = document.getElementById('data') as typeof this.elements.data;
         this.elements.t = document.getElementById('t') as typeof this.elements.t;
+        console.log("Element list",this.elements);
     }
 
     safe(a: string) {
@@ -405,6 +424,68 @@ class BytebeatSystem {
         }
     }
 
+    saveFile() {
+        const object: dollboxFileData = {
+            samplerate: this.SR,
+            range: this.elements.soundRangeSelect!.value as soundRange,
+            method: this.elements.compilationModeSelect!.value as compilationMethod,
+            code: this.elements.codeArea!.value,
+            pcms: [],
+            dollbox: "030a"
+        };
+        const compressed: Uint8Array = pako.deflate(JSON.stringify(object));
+        // Transmit the file data to Rust to be saved there
+        invoke('save_file', { data: compressed });
+    }
+
+    getFileData() {
+        return new Promise<null | Uint8Array>(async (resolve,reject)=>{
+            // Prepare for any result
+            let success_unlisten = await listen<number[]>('opened_data', (event) => {
+                const data = new Uint8Array(event.payload);
+                success_unlisten();
+                error_unlisten();
+                cancel_unlisten();
+                resolve(data);
+            });
+            let error_unlisten = await listen<string>('open_error', (event) => {
+                success_unlisten();
+                error_unlisten();
+                cancel_unlisten();
+                reject(new Error(event.payload));
+            });
+            let cancel_unlisten = await listen<void>('open_cancel', () => {
+                success_unlisten();
+                error_unlisten();
+                cancel_unlisten();
+                resolve(null);
+            });
+            // Ask the Rust end for file plz...
+            invoke('open_file', {});
+        });
+    }
+
+    loadFile() {
+        this.getFileData().then((data)=>{
+            if(data===null) {
+                return;
+            }
+            const object: dollboxFileData = JSON.parse(pako.inflate(data, { to: 'string' }));
+            console.log(object);
+            switch(object.dollbox) {
+                default: {
+                    this.elements.loadError!.innerText = "Invalid dollbox version: "+object.dollbox;
+                } break;
+                case "030a": {
+                    this.loadCodeBase(object.code,object.samplerate,object.range,object.method);
+                }
+            }
+        }).catch((error)=>{
+            console.error(error);
+            this.elements.loadError!.innerText = String(error);
+        })
+    }
+
     createData() {
         let D = this.elements.data!;
         D.value = "DOLLBOX:";
@@ -514,6 +595,14 @@ class BytebeatSystem {
         // this.elements.saveButton.addEventListener('click', async () => {
         //     await window.elecAPI.save(this.elements.codeArea.value, this.SR, this.elements.soundRangeSelect.value, this.elements.compilationModeSelect.value);
         // })
+
+        this.elements.saveButton!.addEventListener('click',()=>{
+            this.saveFile();
+        });
+
+        this.elements.loadButton!.addEventListener('click',()=>{
+            this.loadFile();
+        });
 
         let libraries = document.getElementsByClassName('library-part');
         for (let i = 0; i < libraries.length; i++) {

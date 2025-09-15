@@ -50,8 +50,7 @@ body {
 	display: inline-block;
 }
 
-#io,
-#library {
+#right-box {
 	width: calc(100% - 24px);
 	max-width: calc(100% - 24px);
 	margin: 4px;
