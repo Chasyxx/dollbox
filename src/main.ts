@@ -16,7 +16,8 @@
 
 // @ts-ignore no type for pako.
 import pako from './assets/pako.esm.mjs';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core'; // for file saving
+import { listen } from '@tauri-apps/api/event'; // for file loading
 
 type visualiserPoint = {
   t: number,
@@ -62,6 +63,15 @@ type libraryEntry = {
   fileOriginal?: boolean;
   fileFormatted?: boolean;
   children?: libraryEntry[];
+};
+
+type dollboxFileData = {
+    samplerate: number,
+    range: soundRange,
+    method: compilationMethod,
+    code: string,
+    pcms: [],
+    dollbox: "030a"
 };
 
 class BytebeatSystem {
@@ -414,6 +424,68 @@ class BytebeatSystem {
         }
     }
 
+    saveFile() {
+        const object: dollboxFileData = {
+            samplerate: this.SR,
+            range: this.elements.soundRangeSelect!.value as soundRange,
+            method: this.elements.compilationModeSelect!.value as compilationMethod,
+            code: this.elements.codeArea!.value,
+            pcms: [],
+            dollbox: "030a"
+        };
+        const compressed: Uint8Array = pako.deflate(JSON.stringify(object));
+        // Transmit the file data to Rust to be saved there
+        invoke('save_file', { data: compressed });
+    }
+
+    getFileData() {
+        return new Promise<null | Uint8Array>(async (resolve,reject)=>{
+            // Prepare for any result
+            let success_unlisten = await listen<number[]>('opened_data', (event) => {
+                const data = new Uint8Array(event.payload);
+                success_unlisten();
+                error_unlisten();
+                cancel_unlisten();
+                resolve(data);
+            });
+            let error_unlisten = await listen<string>('open_error', (event) => {
+                success_unlisten();
+                error_unlisten();
+                cancel_unlisten();
+                reject(new Error(event.payload));
+            });
+            let cancel_unlisten = await listen<void>('open_cancel', () => {
+                success_unlisten();
+                error_unlisten();
+                cancel_unlisten();
+                resolve(null);
+            });
+            // Ask the Rust end for file plz...
+            invoke('open_file', {});
+        });
+    }
+
+    loadFile() {
+        this.getFileData().then((data)=>{
+            if(data===null) {
+                return;
+            }
+            const object: dollboxFileData = JSON.parse(pako.inflate(data, { to: 'string' }));
+            console.log(object);
+            switch(object.dollbox) {
+                default: {
+                    this.elements.loadError!.innerText = "Invalid dollbox version: "+object.dollbox;
+                } break;
+                case "030a": {
+                    this.loadCodeBase(object.code,object.samplerate,object.range,object.method);
+                }
+            }
+        }).catch((error)=>{
+            console.error(error);
+            this.elements.loadError!.innerText = String(error);
+        })
+    }
+
     createData() {
         let D = this.elements.data!;
         D.value = "DOLLBOX:";
@@ -524,30 +596,13 @@ class BytebeatSystem {
         //     await window.elecAPI.save(this.elements.codeArea.value, this.SR, this.elements.soundRangeSelect.value, this.elements.compilationModeSelect.value);
         // })
 
-        this.elements.saveButton!.addEventListener('click',async()=>{
-            type dollboxFileData = {
-                samplerate: number,
-                range: soundRange,
-                method: compilationMethod,
-                code: string,
-                pcms: [],
-                dollbox: "030"
-            };
-            const object: dollboxFileData = {
-                samplerate: this.SR,
-                range: this.elements.soundRangeSelect!.value as soundRange,
-                method: this.elements.compilationModeSelect!.value as compilationMethod,
-                code: this.elements.codeArea!.value,
-                pcms: [],
-                dollbox: "030"
-            };
-            const compressed: Uint8Array = pako.deflate(JSON.stringify(object));
-            // pull up DA DIALOG.
-            invoke('save_file',{ data: compressed });
-            // if(this.elements.saver!.href) URL.revokeObjectURL(this.elements.saver!.href);
-            // //@ts-ignore it's an arraybuffer dude.
-            // this.elements.saver!.href = URL.createObjectURL(new Blob([compressed], { type: "application/octet-stream" }));
-        })
+        this.elements.saveButton!.addEventListener('click',()=>{
+            this.saveFile();
+        });
+
+        this.elements.loadButton!.addEventListener('click',()=>{
+            this.loadFile();
+        });
 
         let libraries = document.getElementsByClassName('library-part');
         for (let i = 0; i < libraries.length; i++) {

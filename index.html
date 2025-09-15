@@ -74,15 +74,15 @@
       </div>
       <div id="visual-container">
         <canvas width="512" height="256" id="waveform"></canvas>
-          <canvas width="512" height="256" id="diagram" class="hide"></canvas>
-          <canvas width="512" height="256" id="fft" class="hide"></canvas>
+        <canvas width="512" height="256" id="diagram" class="hide"></canvas>
+        <canvas width="512" height="256" id="fft" class="hide"></canvas>
       </div>
     </div>
     <div id="main-right">
-      <div id="library">
-        <div class="electron-show hide">
-          <h1>Built-in dE library loader</h1>
-          <header>This area loads codes from the <a href="https://dollchan.net/bytebeat/">DollChan</a> library
+      <div id="right-box">
+        <div>
+          <h1>Library loader</h1>
+          <header>This area codes from Dollchan-compatible libraries.
           </header>
           <details class="library-part">
             <summary class="library-head">
@@ -114,45 +114,51 @@
             </summary>
             <div id="library-funcbeat" class="library-content"></div>
           </details>
-          <hr>
         </div>
-        <h1>Dataloader</h1>
-        <header>This area handles encoded strings for quick sharing.
-          It does not encode PCM samples.</header>
-        <br />
-        <div class="flex"><button id="load-data">Load data...</button><button id="make-data">Generate
-            data...</button></div>
-        <textarea id="data">Data goes here...</textarea>
-        <br />
+
         <hr>
-        <h1>Fileloader</h1>
-        <header>This area handles saving/loading DOLLBOX projects.</header>
-        <button id="button-open">Open a File</button>
-        <b id="open-error"></b>
-        <button id="button-save">Save a File</button>
-        <input type="file" id="fileloader-opener" name="fileloader-opener" accept=".dblx">
-        <a href="" id="fileloader-saver" download="project.dblx" target="_blank">Fileloader saver</a>
-        <hr />
-        <h1>GNU AGPL disclaimers</h1>
-        <details>
-          <summary>Warranty disclaimer</summary>
-          <article>THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-            OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM “AS IS” WITHOUT
-            WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-            MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF
-            THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
-            REPAIR OR CORRECTION.</article>
-        </details>
-        <details>
-          <summary>Liability disclaimer</summary>
-          <article>IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL ANY COPYRIGHT HOLDER, OR
-            ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
-            INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO
-            USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES
-            SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF
-            SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</article>
-        </details>
-        <a href="https://github.com/Chasyxx/dollbox" target="_blank">Open this page's source code in a new tab</a>
+
+        <div>
+          <h1>Dataloader</h1>
+          <header>This area handles encoded strings for quick sharing.
+            It does not encode PCM samples.</header>
+          <br />
+          <div class="flex"><button id="load-data">Load data...</button><button id="make-data">Generate
+              data...</button></div>
+          <textarea id="data">Data goes here...</textarea>
+          <br />
+        </div>
+
+        <hr>
+
+        <div>
+          <h1>Fileloader</h1>
+          <header>This area handles saving/loading DOLLBOX projects.</header>
+          <button id="button-open">Open a File</button><br>
+          <b id="open-error"></b><br>
+          <button id="button-save">Save a File</button><br>
+          <hr />
+          <h1>GNU AGPL disclaimers</h1>
+          <details>
+            <summary>Warranty disclaimer</summary>
+            <article>THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+              OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM “AS IS” WITHOUT
+              WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+              MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF
+              THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
+              REPAIR OR CORRECTION.</article>
+          </details>
+          <details>
+            <summary>Liability disclaimer</summary>
+            <article>IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING WILL ANY COPYRIGHT HOLDER, OR
+              ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
+              INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO
+              USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES
+              SUSTAINED BY YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS), EVEN IF
+              SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.</article>
+          </details>
+          <a href="https://github.com/Chasyxx/dollbox" target="_blank">Open this page's source code in a new tab</a>
+        </div>
       </div>
     </div>
   </div>
