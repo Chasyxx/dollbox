@@ -14,7 +14,8 @@
 
 // Copyright 2024, 2025 Chase Taylor
 
-export {};
+//@ts-ignore No type for Pako!
+import pako from "./assets/pako.esm.mjs";
 
 type visualiserPoint = {
   t: number,
@@ -407,24 +408,37 @@ class BytebeatSystem {
 
     createData() {
         let D = this.elements.data!;
-        D.value = "DOLLBOX:";
+        D.value = "DOLLBOX2:";
         D.value += `${this.SR}:`;
         D.value += `${this.elements.soundRangeSelect!.value}:`;
         D.value += `${this.elements.compilationModeSelect!.value}:`;
-        D.value += btoa(this.elements.codeArea!.value);
+        D.value += pako.deflateRaw(this.elements.codeArea!.value).toBase64();
         window.location.hash = D.value;
     }
 
     loadData() {
         let Z = this.elements.data!.value.trim();
-        Z = Z.replace('DOLLBOX:', '');
-        const SR = +(Z.match(/\d+/)??"8000");
-        Z = Z.replace(/\d+/, '');
-        const codeSoundRange = (Z.match(/\w+(?=:)/)??soundRange.u8)[0] as soundRange;
-        Z = Z.replace(/\w+:/, '');
-        const codeCompilationMethod = (Z.match(/\w+(?=:)/)??compilationMethod.expression)[0] as compilationMethod;
-        Z = Z.replace(/\w+:/, '');
-        this.loadCodeBase(atob(Z.slice(1)), SR, codeSoundRange, codeCompilationMethod);
+        if(Z.startsWith("DOLLBOX2")) {
+            Z = Z.replace('DOLLBOX2:', '');
+            const SR = +(Z.match(/\d+/)??"8000");
+            Z = Z.replace(/\d+/, '');
+            const codeSoundRange = (Z.match(/\w+(?=:)/)??soundRange.u8)[0] as soundRange;
+            Z = Z.replace(/\w+:/, '');
+            const codeCompilationMethod = (Z.match(/\w+(?=:)/)??compilationMethod.expression)[0] as compilationMethod;
+            Z = Z.replace(/\w+:/, '');
+            //@ts-ignore - frombase64 supported in my en
+            const ary = Uint8Array.fromBase64(Z.slice(1));
+            this.loadCodeBase(pako.inflateRaw(ary, { to: 'string' }), SR, codeSoundRange, codeCompilationMethod);
+        } else if(Z.startsWith("DOLLBOX")) {
+            Z = Z.replace('DOLLBOX:', '');
+            const SR = +(Z.match(/\d+/)??"8000");
+            Z = Z.replace(/\d+/, '');
+            const codeSoundRange = (Z.match(/\w+(?=:)/)??soundRange.u8)[0] as soundRange;
+            Z = Z.replace(/\w+:/, '');
+            const codeCompilationMethod = (Z.match(/\w+(?=:)/)??compilationMethod.expression)[0] as compilationMethod;
+            Z = Z.replace(/\w+:/, '');
+            this.loadCodeBase(atob(Z.slice(1)), SR, codeSoundRange, codeCompilationMethod);
+        }
     }
 
     initElements() {
