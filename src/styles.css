@@ -1,116 +1,255 @@
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
+/*
+    This file is part of the program DOLLBOX, a standalone bytebeat player app.
+
+    This program is free software: you can redistribute it and/or modify it under
+    the terms of the GNU Affero General Public License as published by the Free Software
+    Foundation, either version 3 of the License, or (at your option) any later
+    version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+    PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License along with
+    this program. If not, see <https://www.gnu.org/licenses/>. 
+
+	Copyright 2024, 2025 Chase Taylor
+*/
+
+@font-face {
+	font-family: tomo;
+	src: url('tomo.ttf');
 }
 
-.logo.typescript:hover {
-  filter: drop-shadow(0 0 2em #2d79c7);
-}
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+body {
+	font-family: tomo, 'Courier New', Courier, monospace;
+	background-color: black;
+	color: white;
+	overflow: hidden;
 }
 
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+.flex {
+	display: flex;
+	flex-direction: row;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
+#main-left {
+	width: 530px;
+	min-width: 530px;
+	height: calc(100vh - 12px);
+	display: inline-block;
+	margin: 4px;
+	margin-right: 8px;
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
+#main-right {
+	width: calc(100% - 530px);
+	max-width: calc(100% - 530px);
+	display: inline-block;
 }
 
-.row {
-  display: flex;
-  justify-content: center;
+#io,
+#library {
+	width: calc(100% - 24px);
+	max-width: calc(100% - 24px);
+	margin: 4px;
+	border: 4px ridge white;
+	padding: 4pt;
+	height: calc(100vh - 40px);
+	overflow-y: scroll;
+	word-wrap: break-word;
+	font-size: small;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+#term {
+	margin: 4px;
+	width: 50%;
+	border: 4px ridge white;
+	padding: 4pt;
 }
 
-a:hover {
-  color: #535bf2;
+#keyboardpad {
+	margin: 4px;
+	width: 50%;
+	border: 4px ridge white;
+	padding: 4pt
 }
 
-h1 {
-  text-align: center;
+#waveform,
+#diagram,
+#fft {
+	border: 1px solid white;
+	padding: 0;
+	margin: 0;
 }
 
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+#waveform {
+	background-color: blue;
 }
 
-button {
-  cursor: pointer;
+#diagram {
+	background-color: red;
 }
 
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
+#fft {
+	background-color: lime;
 }
 
-input,
-button {
-  outline: none;
+#code-area {
+	background-image: linear-gradient(to top, #0f1f3f, #1f3f8f);
+	width: 508px;
+	max-width: 508px;
+	padding: 2px;
+	height: 256px;
+	resize: vertical;
+	color: white;
+	overflow-x: auto;
 }
 
-#greet-input {
-  margin-right: 5px;
+#data {
+	background-image: linear-gradient(to top, #0f1f3f, #1f3f8f);
+	width: 256px;
+	padding: 2px;
+	height: 256px;
+	resize: both;
+	color: white;
+	word-wrap: break-word;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
+.library-codebutton {
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	font-family: tomo, 'Courier New', Courier, monospace;
+	font-size: 8pt;
+	color: white;
+	margin-bottom: 0pt;
+}
 
-  a:hover {
-    color: #24c8db;
-  }
+.library-hidden>summary, .stereo-marker1 {
+	color: #4FFF4F;
+}
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
+.stereo-marker2 {
+	color: #FF4FFF;
+}
+
+.mode-marker-signed-bytebeat {
+	color:#3f7fff;
+}
+
+.mode-marker-floatbeat {
+	color:#0f3fff;
+}
+
+.mode-marker-funcbeat {
+	color:#3fff3f;
+}
+
+.control-select {
+	background-color: #0f1f3f;
+}
+
+.controls-container {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	padding: 0;
+	margin: 0;
+}
+
+.control-button,
+.control-select {
+	margin: 0;
+	height: 17pt;
+	width: 32pt;
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	color: white;
+	display: inline-block;
+	flex-grow: 1;
+	border: 1px solid white;
+	align-self: stretch;
+}
+
+.warning {
+	color: #FF4F4F;
+}
+
+.control-number {
+	margin: 0;
+	padding: 0;
+	height: 16pt;
+	width: 32pt;
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	color: white;
+	display: inline-block;
+	flex-grow: 1;
+	border: 1px solid white;
+	align-self: stretch;
+}
+
+#volume-container {
+	margin: 0;
+	padding: 0;
+	height: 16pt;
+	width: 32pt;
+	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
+	color: white;
+	display: inline-block;
+	flex-grow: 1;
+	border: 1px solid white;
+	align-self: stretch;
+}
+
+.noright {
+	border-right: none;
+}
+
+.control-button:hover,
+.control-select:hover {
+	background-image: linear-gradient(to bottom, #1f3f7f, #3f7fff);
+}
+
+.control-button:active {
+	background-image: linear-gradient(to bottom, #3f7fff, #7fcfff);
+	color: black;
+}
+
+/* .control-container {
+	display: flex;
+} */
+
+#volume-slider {
+	width: 64px;
+}
+
+#volume-container {
+	width: 64px;
+	flex-grow: 0;
+}
+
+.hide {
+	display: none !important;
+}
+
+#error {
+	color: black;
+	background-color: azure;
+}
+
+#t {
+	background-color: blue;
+	color: azure;
+}
+
+.grow {
+	flex-grow: 1;
+}
+
+.code {
+	color: #dfaf14 !important;
+}
+
+.code:hover {
+	color: #b014df !important;
 }

@@ -1,7 +1,24 @@
-# Tauri + Vanilla TS
+# DOLLBOX
+This is a standalone bytebeat player built on Tauri.
+The idea is so you can have a working JavaScript player even when offline.
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Typescript.
+> [!NOTE]
+>
+> Unlike older Electron versions that worked in-browser, 
+> versions From 0.3.0 on use Tauri and TypeScript.
+> There is no framework or bundler at the moment.
 
-## Recommended IDE Setup
+## Running from the source code
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+### Make sure you have Tauri!
+You can find a quickstart guide at https://v2.tauri.app/start/.
+
+I personally use [Deno](https://deno.com/) and created this project with the Deno template.
+Make sure to get that if you don't have it.
+
+Run `deno add -D npm:@tauri-apps/cli@latest` to get Tauri (At lest, this is what I did).
+
+### Instructions
+1. Make sure your terminal is within whatever folder you cloned the repo to.
+
+2. `deno task tauri dev`
