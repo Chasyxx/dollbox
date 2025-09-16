@@ -34,8 +34,8 @@ body {
 }
 
 #main-left {
-	width: 530px;
-	min-width: 530px;
+	width: 514px;
+	min-width: 514px;
 	height: calc(100vh - 12px);
 	display: inline-block;
 	margin: 4px;
@@ -50,25 +50,34 @@ body {
 	display: inline-block;
 }
 
+.library-author-container-1, .library-author-container-2, #right-box {
+	margin: 4px 0;
+	padding: 4pt;
+	overflow-y: scroll;
+	word-wrap: break-word;
+}
+
 #right-box {
 	width: calc(100% - 24px);
 	max-width: calc(100% - 24px);
 	margin: 4px;
 	border: 4px ridge white;
-	padding: 4pt;
 	height: calc(100vh - 40px);
-	overflow-y: scroll;
-	word-wrap: break-word;
-	font-size: small;
 }
 
-.library-author-container {
-	margin: 4px 0;
-	border: 4px ridge white;
-	padding: 4pt;
-	overflow-y: scroll;
-	word-wrap: break-word;
-	font-size: small;
+.library-author-container-1, .library-author-container-2 {
+	margin: 10pt 0;
+	font-size: 10pt;
+}
+
+.library-author-container-1 {
+	border: 4px ridge green;
+	background-color: darkgreen;
+}
+
+.library-author-container-2 {
+	border: 4px ridge blue;
+	background-color: darkblue;
 }
 
 #term {
@@ -114,6 +123,7 @@ body {
 	resize: vertical;
 	color: white;
 	overflow-x: auto;
+	font: 8pt tomo;
 }
 
 #data {
@@ -124,6 +134,7 @@ body {
 	resize: both;
 	color: white;
 	word-wrap: break-word;
+	font: 6pt tomo;
 }
 
 .library-codebutton {
@@ -134,8 +145,18 @@ body {
 	margin-bottom: 0pt;
 }
 
-.library-hidden>summary, .stereo-marker1 {
+.stereo-marker1 {
 	color: #4FFF4F;
+}
+
+.library-author-container-1 > .library-hidden > summary {
+	background-color: #AFAFFF;
+	color: black;
+}
+
+.library-author-container-2 > .library-hidden > summary {
+	background-color: #4FFF4F;
+	color: black;
 }
 
 .stereo-marker2 {
@@ -164,6 +185,7 @@ body {
 	align-items: stretch;
 	padding: 0;
 	margin: 0;
+	width: 514px;
 }
 
 .control-button,
@@ -177,6 +199,8 @@ body {
 	flex-grow: 1;
 	border: 1px solid white;
 	align-self: stretch;
+	appearance: none;
+	border-radius: 0;
 }
 
 .warning {
@@ -243,15 +267,25 @@ body {
 #error {
 	color: black;
 	background-color: azure;
+	font-size: 8pt;
+	max-width: 514px;
 }
 
 #t {
 	background-color: blue;
 	color: azure;
+	font-size: 16pt;
+	max-width: 514px;
 }
 
 .grow {
 	flex-grow: 1;
+	justify-content: center;
+}
+
+.grow > .centerer {
+	margin-inline: auto;
+	max-width: fit-content;
 }
 
 .code {

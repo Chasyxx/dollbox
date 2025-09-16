@@ -42,10 +42,22 @@
 // Scroll sidebar for disclaimers</textarea>
       <div id="error">No error</div>
       <div id="t">-</div>
-      <div class="flex">
-        <span class="grow">Waveform <input type="checkbox" id="toggle-waveform" checked></span>
-        <span class="grow">Diagram <input type="checkbox" id="toggle-diagram"></span>
-        <span class="grow">FFT <input type="checkbox" id="toggle-fft"></span>
+      <div class="flex controls-container">
+        <div class="grow">
+          <div class="centerer">
+            Waveform <input type="checkbox" id="toggle-waveform" checked>
+          </div>
+        </div>
+        <div class="grow">
+          <div class="centerer">
+            Diagram <input type="checkbox" id="toggle-diagram">
+          </div>
+        </div>
+        <div class="grow">
+          <div class="centerer">
+            FFT <input type="checkbox" id="toggle-fft">
+          </div>
+        </div>
       </div>
       <div class="controls-container">
         <button class="control-button noright" id="rewind-button">R</button>
@@ -59,7 +71,7 @@
         <input type="number" class="control-number" value="8000" id="samplerate">
         <div id="volume-container"><input id="volume-slider" type="range" min="0" max="100" value="50"></div>
       </div>
-      <div class="flex">
+      <div class="flex controls-container">
         <select class="control-select" title="Sound range" id="range">
           <option selected value="regular">0 to 255</option>
           <option value="signed">-128 to 127</option>
@@ -80,10 +92,9 @@
     </div>
     <div id="main-right">
       <div id="right-box">
-        <div>
-          <h1>Built-in dE library loader</h1>
-          <header>This area loads codes from the <a href="https://dollchan.net/bytebeat/">DollChan</a> library
-          </header>
+        <div id="library">
+          <h1>Library loader</h1>
+          <header>This area loads <a href="https://dollchan.net/bytebeat/">DollChan</a>-compatible libraries.</header>
           <details class="library-part">
             <summary class="library-head">
               C compatible codes<span class="loading hide"> (Loading...)</span>

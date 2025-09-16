@@ -619,6 +619,7 @@ class BytebeatSystem {
                             article.appendChild(error);
                             return;
                         }
+                        let odd = 0;
                         data.bytes().then(async(A) => {
                             // for (const i of A) {
                             //     this.generateEntry(i, list);
@@ -628,18 +629,27 @@ class BytebeatSystem {
                                 const author = _author as LibraryAuthor;
                                 const { songs } = author;
                                 const box = document.createElement('li');
-                                box.classList.add('library-author-container');
-                                const lu = document.createElement('span');
+                                box.classList.add('library-author-container-'+(odd+1));
+                                const label = document.createElement('span');
                                 const songList = document.createElement('ul');
                                 for(let i of songs) {
                                     this.generateSongDetails(i,songList);
                                 }
-                                const ll = document.createElement('span');
-                                ll.innerText=lu.innerText=author.author||"<no author>";
-                                box.appendChild(lu);
-                                box.appendChild(songList);
-                                box.appendChild(ll);
+                                label.innerText=author.author||"<no author>";
+                                box.appendChild(label);
+                                if(songs.length > 5) {
+                                    const details = document.createElement('details');
+                                    details.classList.add("library-hidden");
+                                    const summary = document.createElement('summary');
+                                    summary.innerText = `${songs.length} songs`;
+                                    details.appendChild(summary);
+                                    details.appendChild(songList);
+                                    box.appendChild(details);
+                                } else {
+                                    box.appendChild(songList);
+                                }
                                 list.appendChild(box);
+                                odd = 1 - odd;
                             }
                             loading.remove();
                         });
