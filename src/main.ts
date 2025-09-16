@@ -66,7 +66,7 @@ enum starRating {
 
 type LibraryRemixLink = {
     hash: string,
-    author: string,
+    author?: string,
     name: string,
     url?: string,
 }
@@ -124,6 +124,9 @@ type LibrarySong = {
     user_added: string,
     /** List of songs whose inspiration or code were used in this one. */
     remix?: LibraryRemixLink[],
+    /** External music peice that was covered. */
+    coverName?: string,
+    coverUrl?: string,
     /** YYYY-MM-DD. */
     date?: `${number}-${number}-${number}`,
     stereo?: boolean
@@ -137,9 +140,9 @@ type LibraryAuthor = {
 class BytebeatSystem {
     SR: number;
     audioNode: AudioWorkletNode | null;
-    analyserNode: AnalyserNode | null
+    analyserNode: AnalyserNode | null;
     gainNode: GainNode | null;
-    audioContext: AudioContext | null
+    audioContext: AudioContext | null;
     elements: {
         samplerate: null | HTMLInputElement,
         canvasWaveform: null | HTMLCanvasElement,
@@ -165,6 +168,7 @@ class BytebeatSystem {
         data: null | HTMLTextAreaElement,
         t: null | HTMLDivElement
     };
+    libraryCache: Map<string, LibrarySong>;
     visualiserPoints: visualiserPoint[];
     waveformLast: [number, number];
     constructor() {
@@ -200,6 +204,7 @@ class BytebeatSystem {
         };
         this.visualiserPoints = [];
         this.waveformLast = [0, 0];
+        this.libraryCache = new Map();
     }
 
     static mod(a: number, b: number): number {
@@ -351,7 +356,7 @@ class BytebeatSystem {
         this.elements.dataCreate = document.getElementById('make-data') as typeof this.elements.dataCreate;
         this.elements.dataLoad = document.getElementById('load-data') as typeof this.elements.dataLoad;
         this.elements.data = document.getElementById('data') as typeof this.elements.data;
-        this.elements.t = document.getElementById('t') as typeof this.elements.t;
+        this.elements.t = document.getElementById('t') as typeof this.elements.t
     }
 
     safe(a: string) {
@@ -365,42 +370,112 @@ class BytebeatSystem {
         return code;
     }
 
-    async generateSongDetails(entry: LibrarySong, treeElem: HTMLUListElement) {
-        let elem = document.createElement('li');
-        treeElem.appendChild(elem);
+    async generateSongDetails(entry: LibrarySong, entryContainer: HTMLElement) {
         // Name, author
         let res = "";
         if (entry.name) {
             if (entry.url) {
                 let url = Array.isArray(entry.url) ? entry.url[0] : entry.url;
-                res = `&quot;<a href="${url.replace(/"/g, '\\"')}" target="_blank">${this.safe(entry.name)}</a>&quot;`;
+                res = `&quot;<a href="${this.safe(url)}" target="_blank">${this.safe(entry.name)}</a>&quot;`;
             }
             else res = `&quot;${this.safe(entry.name)}&quot;`;
         } else if (entry.url) {
             let url = Array.isArray(entry.url) ? entry.url[0] : entry.url;
-            res = `(<a href="${url.replace(/"/g, '\\"')}" target="_blank">Unnamed</a>)`;
+            res = `(<a href="${this.safe(url)}" target="_blank">Unnamed</a>)`;
         }
         if(Array.isArray(entry.url) && entry.url.length > 1) {
             for(let i = 1; i < entry.url.length; i++) {
-                res += `<a href="${entry.url[i].replace(/"/g, '\\"')}" target="_blank"> [${i+1}]</a>`;
+                res += `<a href="${this.safe(entry.url[i])}" target="_blank"> [${i+1}]</a>`;
             }
         }
 
-        if (entry.sampleRate && entry.sampleRate !== 8000 || (entry.mode && entry.mode !== soundMode.u8)) res += " @"
+        // Samplerate, mode, stereo
+        if (entry.sampleRate && entry.sampleRate !== 8000 || (entry.mode && entry.mode !== soundMode.u8))
+            res += " @"
         if (entry.sampleRate && entry.sampleRate !== 8000) res += ` ${entry.sampleRate}Hz`;
         if (entry.stereo) res += ' <span class="stereo-marker1">Ste</span><span class="stereo-marker2">reo</span>';
         if (entry.mode && entry.mode !== soundMode.u8) {
             res += ` <span class="mode-marker-${entry.mode.toLowerCase().replace(/\s/g, '-')}">${this.safe(entry.mode)}</span>`;
         }
-        if (entry.description) res += ` &quot;${this.safe(entry.description)}&quot;`;
 
-        if (res !== '') {
-            let nameSpan = document.createElement('span');
-            nameSpan.innerHTML = res;
-            elem.appendChild(nameSpan);
-            elem.appendChild(document.createElement('br'));
+        // Description
+        if (entry.description) res += `<br>&quot;${this.safe(entry.description)}&quot;`;
+
+        // Remix details and view buttons
+        if(entry.remix && entry.remix.length > 0) {
+            for(const remix of entry.remix) {
+                if(remix.url) {
+                    res += `<br>Remix of <a href=${this.safe(remix.url)}>${this.safe(remix.name)}`
+                    if(remix.author) res += ` by ${this.safe(remix.author)}`;
+                    res += '</a>';
+                } else {
+                    res += `<br>Remix of <span>${this.safe(remix.name)}`;
+                    if(remix.author) res += ` by ${this.safe(remix.author)}`;
+                    res += '</span>'
+                }
+                res += ` <button class="library-remix-button" id="${entry.hash}-${remix.hash}" title="Open this remix's entry">&gt;</button>`+
+                `<div class="library-remix-container hide" id="${entry.hash}-${remix.hash}-container"></div>`;
+            }
         }
 
+        // Cover details
+        if(entry.coverName) {
+            res += `<br>Cover of <a href=${entry.coverUrl!}>${this.safe(entry.coverName)}</a>`;
+        }
+
+        // Add the information area if needed
+        if (res !== '') {
+            let infoSpan = document.createElement('span');
+            infoSpan.innerHTML = res;
+
+            // Add functionalty to remix buttons if needed
+            if(entry.remix && entry.remix.length > 0) {
+                for(const remix of entry.remix) {
+                    const button: HTMLButtonElement | null = infoSpan.querySelector("#"+CSS.escape(entry.hash+"-"+remix.hash));
+                    const container: HTMLDivElement | null = infoSpan.querySelector("#"+CSS.escape(entry.hash+"-"+remix.hash+"-container"));
+                    if(button === null || container === null) {
+                        console.warn("Elements null!? "+remix.name);
+                        continue;
+                    }
+                    button.addEventListener('click',()=>{
+                        if(container.classList.contains("hide")) {
+                            button.innerText="<";
+                            container.classList.remove("hide");
+                            if(!container.hasAttribute("loaded")) {
+                                let entry = this.libraryCache.get(remix.hash);
+                                if(entry===undefined) {
+                                    container.innerText = "Hang on...";
+                                    this.cacheAllLibraryEntries().then(()=>{
+                                        entry = this.libraryCache.get(remix.hash);
+                                        if(entry===undefined) {
+                                            container.innerText = "This remix isn't in the library.";
+                                            return;
+                                        } else {
+                                            container.innerHTML = "";
+                                            this.generateSongDetails(entry,container);
+                                            container.setAttribute('loaded','yes');
+                                        }
+                                    }).catch(error=>{
+                                        container.innerText = String(error);
+                                    });
+                                } else {
+                                    this.generateSongDetails(entry,container);
+                                    container.setAttribute('loaded','yes');
+                                }
+                            }
+                        } else {
+                            button.innerText=">";
+                            container.classList.add("hide");
+                        }
+                    })
+                }
+            }
+
+            entryContainer.appendChild(infoSpan);
+            entryContainer.appendChild(document.createElement('br'));
+        }
+
+        // Add inline codes
         const addCodeLink = (text: string, code: libraryCode, SR: number, mode: soundMode, override?: string | null)=>{
             let container = document.createElement('span');
             if (text) {
@@ -418,11 +493,10 @@ class BytebeatSystem {
             codeLink.classList.add("code");
             codeLink.innerText = override ?? code;
             container.appendChild(codeLink);
-            elem.appendChild(container);
-            elem.appendChild(document.createElement('br'));
+            entryContainer.appendChild(container);
+            entryContainer.appendChild(document.createElement('br'));
         }
 
-        // Code
         if (entry.codeMin) {
             addCodeLink('Minified', entry.codeMin, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
         }
@@ -435,6 +509,7 @@ class BytebeatSystem {
                 addCodeLink('Formatted', entry.codeForm, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8, entry.code ?  `${BytebeatSystem.libraryCodeToString(entry.codeForm).length - BytebeatSystem.libraryCodeToString(entry.code).length}c more`:null);
         }
 
+        // Add file load buttons
         if (entry.fileOrig || entry.fileMin || entry.fileForm) {
             let buttonRow = document.createElement('div');
             buttonRow.classList.add("flex");
@@ -462,27 +537,8 @@ class BytebeatSystem {
             if (entry.fileForm) {
                 addCodeLink("Formatted "+formatBytes(entry.codeFormLen??0), `https://dollchan.net/bytebeat/data/songs/formatted/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
-            elem.appendChild(buttonRow);
+            entryContainer.appendChild(buttonRow);
         }
-
-        // if (entry.children) {
-        //     let hide;
-        //     let tree = document.createElement('ul');
-        //     if (entry.children.length > 10) {
-        //         hide = document.createElement('details');
-        //         hide.classList.add('library-hidden');
-        //         let hideText = document.createElement('summary');
-        //         hideText.innerText = "Many entries; click to show";
-        //         hide.appendChild(hideText); // hideText &
-        //         hide.appendChild(tree);     // tree -> hide ->
-        //         elem.appendChild(hide);     // elem
-        //     } else {
-        //         elem.appendChild(tree);     // tree -> elem
-        //     }
-        //     for (const A of entry.children) {
-        //         this.generateSongDetails(A, tree);
-        //     }
-        // }
     }
 
     createData() {
@@ -621,9 +677,6 @@ class BytebeatSystem {
                         }
                         let odd = 0;
                         data.bytes().then(async(A) => {
-                            // for (const i of A) {
-                            //     this.generateEntry(i, list);
-                            // }
                             const authors = JSON.parse(pako.ungzip(A, { to: 'string' }));
                             for(const _author of authors) {
                                 const author = _author as LibraryAuthor;
@@ -632,8 +685,12 @@ class BytebeatSystem {
                                 box.classList.add('library-author-container-'+(odd+1));
                                 const label = document.createElement('span');
                                 const songList = document.createElement('ul');
-                                for(let i of songs) {
-                                    this.generateSongDetails(i,songList);
+                                for(let song of songs) {
+                                    this.libraryCache.set(song.hash,song);
+                                    const listEntry = document.createElement('li');
+                                    listEntry.classList.add("library-entry");
+                                    this.generateSongDetails(song,listEntry);
+                                    songList.appendChild(listEntry);
                                 }
                                 label.innerText=author.author||"<no author>";
                                 box.appendChild(label);
@@ -666,6 +723,29 @@ class BytebeatSystem {
                 }
             })
         }
+    }
+
+    cacheAllLibraryEntries() {
+        return new Promise<void>((resolve,reject)=>{
+            tauriFetch(`https://dollchan.net/bytebeat/data/library/all.gz`, { cache: 'no-cache' }).then(data => {
+                if (!data.ok) {
+                    console.error("Couldn't cache all of the library entries due to status code "+data.status);
+                    reject("HTTP "+data.status);
+                    return;
+                }
+                data.bytes().then(async(A) => {
+                    const authors = JSON.parse(pako.ungzip(A, { to: 'string' }));
+                    for(const _author of authors) {
+                        const author = _author as LibraryAuthor;
+                        const { songs } = author;
+                        for(const song of songs) {
+                            this.libraryCache.set(song.hash,song);
+                        }
+                    }
+                    resolve();
+                });
+            });
+        })
     }
 
     async initAudio() {
@@ -772,10 +852,6 @@ class BytebeatSystem {
     sendData(data: any) {
         this.audioNode!.port.postMessage(data);
     }
-
-    // controlsSetSpeed(speed, e) {
-
-    // }
 }
 
 console.log("Script has loaded!");

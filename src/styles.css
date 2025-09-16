@@ -65,19 +65,25 @@ body {
 	height: calc(100vh - 40px);
 }
 
-.library-author-container-1, .library-author-container-2 {
+.library-author-container-1, .library-author-container-2, .library-entry {
 	margin: 10pt 0;
 	font-size: 10pt;
 }
 
 .library-author-container-1 {
-	border: 4px ridge green;
-	background-color: darkgreen;
+	border: 4px ridge rgb(99, 255, 99);
+	background-color: #204d20;
 }
 
 .library-author-container-2 {
-	border: 4px ridge blue;
-	background-color: darkblue;
+	border: 4px ridge rgb(79, 135, 255);
+	background-color: #121241;
+}
+
+.library-remix-container {
+	border: 4px ridge white;
+	background-color: #404040;
+	padding: 10pt;
 }
 
 #term {
@@ -150,12 +156,12 @@ body {
 }
 
 .library-author-container-1 > .library-hidden > summary {
-	background-color: #AFAFFF;
+	background-color: #45ff7d;
 	color: black;
 }
 
 .library-author-container-2 > .library-hidden > summary {
-	background-color: #4FFF4F;
+	background-color: #5afff1;
 	color: black;
 }
 
@@ -164,15 +170,15 @@ body {
 }
 
 .mode-marker-signed-bytebeat {
-	color:#3f7fff;
+	color:rgb(255, 235, 52);
 }
 
 .mode-marker-floatbeat {
-	color:#0f3fff;
+	color:#5afff1;
 }
 
 .mode-marker-funcbeat {
-	color:#3fff3f;
+	color:#45ff7d;
 }
 
 .control-select {
