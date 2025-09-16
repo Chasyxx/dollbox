@@ -14,7 +14,21 @@
 
 // Copyright 2024, 2025 Chase Taylor
 
-export {};
+//@ts-ignore - No type for pako!
+import pako from './assets/pako.esm.mjs'
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+
+function formatBytes(bytes: number, slash: boolean = false) {
+	if(bytes < 2e3) {
+		return bytes + 'B';
+	}
+	// i fear the day we get a 1 Terabyte code...
+	const i0 = Math.floor(Math.log(bytes/2) / Math.log(1000));
+	const d0 = (i0 ? (bytes / (1000 ** i0)).toFixed(2) : bytes) + ['B', 'KB', 'MB', 'GB', 'TB'][i0];
+	const i4 = Math.floor(Math.log(bytes/2) / Math.log(1024));
+	const s4 = (i0 ? (bytes / (1024 ** i0)).toFixed(2) : bytes) + ['B', 'KiB', 'MiB', 'GiB', 'TiB'][i4];
+	return slash?`${s4}/${[d0]}`:`${s4} (${[d0]})`
+}
 
 type visualiserPoint = {
   t: number,
@@ -29,37 +43,95 @@ enum soundMode {
   u8f = 'uFuncbeat',
   i8f = 'iFuncbeat',
   ff = 'Funcbeat'
-}
+};
 
 enum soundRange {
     u8 = 'regular',
     s8 = 'signed',
     f = 'float'
-}
+};
 
 enum compilationMethod {
     expression = 'normal',
     statement = 'func',
-}
+};
 
 type libraryCode = string | string[];
 
-type libraryEntry = {
-  name?: string;
-  url?: string;
-  author?: string;
-  mode?: soundMode;
-  sampleRate?: number;
-  stereo?: boolean;
-  description?: string;
-  codeMinified?: libraryCode;
-  codeOriginal?: libraryCode;
-  codeFormatted?: libraryCode;
-  file?: string;
-  fileMinified?: boolean;
-  fileOriginal?: boolean;
-  fileFormatted?: boolean;
-  children?: libraryEntry[];
+enum starRating {
+    none = 0,
+    star = 1,
+    gold = 2
+}
+
+type LibraryRemixLink = {
+    hash: string,
+    author: string,
+    name: string,
+    url?: string,
+}
+
+type LibrarySong = {
+    /**
+     * A random number associated with the song.
+     * Used to grab remixes and files.
+     */
+    hash: string,
+    name: string,
+    description?: string,
+    /** Source URL. */
+    url?: string | string[],
+    sampleRate: number,
+    mode?: soundMode,
+
+    /** Inline original code. */
+    code?: string,
+    /** Original code length. */
+    codeLen?: number,
+    /**
+     * Indicates the presence of a
+     * file for the original song
+     * server-side. 
+     */
+    fileOrig?: boolean
+
+    /** Inline minified code. */
+    codeMin?: string,
+    /** Minified code length. */
+    codeMinLen?: number,
+    /**
+     * Indicates the presence of a
+     * file for the minified song
+     * server-side. 
+     */
+    fileMin?: boolean
+
+    /** Imline formatted code. */
+    codeForm?: string,
+    /** Formatted code length. */
+    codeFormLen?: number,
+    /**
+     * Indicates the presence of a
+     * file for the formatted song
+     * server-side. 
+     */
+    fileForm?: boolean
+
+    /** Additional tags in code. */
+    tags: string[],
+    rating?: starRating,
+    /** The library admin that added this song. */
+    user_added: string,
+    /** List of songs whose inspiration or code were used in this one. */
+    remix?: LibraryRemixLink[],
+    /** YYYY-MM-DD. */
+    date?: `${number}-${number}-${number}`,
+    stereo?: boolean
+};
+
+type LibraryAuthor = {
+    author: string;
+    songs: LibrarySong[];
 };
 
 class BytebeatSystem {
@@ -293,30 +365,34 @@ class BytebeatSystem {
         return code;
     }
 
-    async generateEntry(entry: libraryEntry, treeElem: HTMLUListElement) {
+    async generateSongDetails(entry: LibrarySong, treeElem: HTMLUListElement) {
         let elem = document.createElement('li');
         treeElem.appendChild(elem);
         // Name, author
-        let res = ""
+        let res = "";
         if (entry.name) {
             if (entry.url) {
-                entry.url = entry.url[0] ?? entry.url;
-                res += `"<a href="${entry.url.replace(/"/g, '\\"')}" target="_blank">${this.safe(entry.name)}</a>"${entry.author ? ' ' : ''}`;
+                let url = Array.isArray(entry.url) ? entry.url[0] : entry.url;
+                res = `&quot;<a href="${url.replace(/"/g, '\\"')}" target="_blank">${this.safe(entry.name)}</a>&quot;`;
             }
-            else res += `"${this.safe(entry.name)}"${entry.author ? ' ' : ''}`;
+            else res = `&quot;${this.safe(entry.name)}&quot;`;
         } else if (entry.url) {
-            entry.url = entry.url[0] ?? entry.url;
-            res += `(<a href="${entry.url.replace(/"/g, '\\"')}" target="_blank">Unnamed</a>)${entry.author ? ' ' : ''}`;
+            let url = Array.isArray(entry.url) ? entry.url[0] : entry.url;
+            res = `(<a href="${url.replace(/"/g, '\\"')}" target="_blank">Unnamed</a>)`;
         }
-        if (entry.author) res += `By ${this.safe(entry.author)}`;
+        if(Array.isArray(entry.url) && entry.url.length > 1) {
+            for(let i = 1; i < entry.url.length; i++) {
+                res += `<a href="${entry.url[i].replace(/"/g, '\\"')}" target="_blank"> [${i+1}]</a>`;
+            }
+        }
 
         if (entry.sampleRate && entry.sampleRate !== 8000 || (entry.mode && entry.mode !== soundMode.u8)) res += " @"
         if (entry.sampleRate && entry.sampleRate !== 8000) res += ` ${entry.sampleRate}Hz`;
         if (entry.stereo) res += ' <span class="stereo-marker1">Ste</span><span class="stereo-marker2">reo</span>';
-        if (entry.mode && entry.mode !== 'Bytebeat') {
+        if (entry.mode && entry.mode !== soundMode.u8) {
             res += ` <span class="mode-marker-${entry.mode.toLowerCase().replace(/\s/g, '-')}">${this.safe(entry.mode)}</span>`;
         }
-        if (entry.description) res += ` "${this.safe(entry.description)}"`;
+        if (entry.description) res += ` &quot;${this.safe(entry.description)}&quot;`;
 
         if (res !== '') {
             let nameSpan = document.createElement('span');
@@ -335,7 +411,7 @@ class BytebeatSystem {
             code = BytebeatSystem.libraryCodeToString(code);
             codeLink.setAttribute('code', code);
             codeLink.setAttribute('rate', SR.toString());
-            codeLink.setAttribute('mode', mode ?? soundMode.u8);
+            codeLink.setAttribute('mode', mode);
             codeLink.addEventListener('click', ()=>{
                 this.loadCode(codeLink);
             })
@@ -347,15 +423,19 @@ class BytebeatSystem {
         }
 
         // Code
-        if (entry.codeMinified) {
-            addCodeLink('Minified', entry.codeMinified, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8)
+        if (entry.codeMin) {
+            addCodeLink('Minified', entry.codeMin, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
         }
 
-        if (entry.codeOriginal) {
-            addCodeLink(entry.codeMinified ? 'Original' : '', entry.codeOriginal, entry.sampleRate ?? 8000, soundMode.u8, entry.codeMinified ? `${BytebeatSystem.libraryCodeToString(entry.codeOriginal).length - BytebeatSystem.libraryCodeToString(entry.codeMinified).length}c more` : null)
+        if (entry.code) {
+            addCodeLink(entry.code ? 'Original' : '', entry.code, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8, entry.codeMin ? `${BytebeatSystem.libraryCodeToString(entry.code).length - BytebeatSystem.libraryCodeToString(entry.codeMin).length}c more` : null)
         }
 
-        if (entry.file) {
+        if (entry.codeForm) {
+                addCodeLink('Formatted', entry.codeForm, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8, entry.code ?  `${BytebeatSystem.libraryCodeToString(entry.codeForm).length - BytebeatSystem.libraryCodeToString(entry.code).length}c more`:null);
+        }
+
+        if (entry.fileOrig || entry.fileMin || entry.fileForm) {
             let buttonRow = document.createElement('div');
             buttonRow.classList.add("flex");
             const addCodeLink=(text: string, file: string, SR: number, mode?: soundMode)=>{
@@ -371,38 +451,38 @@ class BytebeatSystem {
                 buttonRow.appendChild(button);
             }
 
-            if (entry.fileMinified) {
-                addCodeLink("Minified", `https://dollchan.net/bytebeat/library/minified/${entry.file}`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
+            if (entry.fileMin) {
+                addCodeLink("Minified "+formatBytes(entry.codeMinLen??0), `https://dollchan.net/bytebeat/data/songs/minified/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
 
-            if (entry.fileOriginal) {
-                addCodeLink("Original", `https://dollchan.net/bytebeat/library/original/${entry.file}`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
+            if (entry.fileOrig) {
+                addCodeLink("Original "+formatBytes(entry.codeLen??0), `https://dollchan.net/bytebeat/data/songs/original/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
 
-            if (entry.fileFormatted) {
-                addCodeLink("Formatted", `https://dollchan.net/bytebeat/library/formatted/${entry.file}`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
+            if (entry.fileForm) {
+                addCodeLink("Formatted "+formatBytes(entry.codeFormLen??0), `https://dollchan.net/bytebeat/data/songs/formatted/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
             elem.appendChild(buttonRow);
         }
 
-        if (entry.children) {
-            let hide;
-            let tree = document.createElement('ul');
-            if (entry.children.length > 10) {
-                hide = document.createElement('details');
-                hide.classList.add('library-hidden');
-                let hideText = document.createElement('summary');
-                hideText.innerText = "Many entries; click to show";
-                hide.appendChild(hideText); // hideText &
-                hide.appendChild(tree);     // tree -> hide ->
-                elem.appendChild(hide);     // elem
-            } else {
-                elem.appendChild(tree);     // tree -> elem
-            }
-            for (const A of entry.children) {
-                this.generateEntry(A, tree);
-            }
-        }
+        // if (entry.children) {
+        //     let hide;
+        //     let tree = document.createElement('ul');
+        //     if (entry.children.length > 10) {
+        //         hide = document.createElement('details');
+        //         hide.classList.add('library-hidden');
+        //         let hideText = document.createElement('summary');
+        //         hideText.innerText = "Many entries; click to show";
+        //         hide.appendChild(hideText); // hideText &
+        //         hide.appendChild(tree);     // tree -> hide ->
+        //         elem.appendChild(hide);     // elem
+        //     } else {
+        //         elem.appendChild(tree);     // tree -> elem
+        //     }
+        //     for (const A of entry.children) {
+        //         this.generateSongDetails(A, tree);
+        //     }
+        // }
     }
 
     createData() {
@@ -528,7 +608,7 @@ class BytebeatSystem {
                     let path = article.id.replace("library-", '');
                     let list = document.createElement('ul');
                     article.appendChild(list);
-                    fetch(`https://dollchan.net/bytebeat/library/${path}.json`, { cache: 'no-cache' }).then(data => {
+                    tauriFetch(`https://dollchan.net/bytebeat/data/library/${path}.gz`, { cache: 'no-cache' }).then(data => {
                         if (!data.ok) {
                             loading.classList.add('hide');
                             header.removeAttribute('loaded');
@@ -539,9 +619,27 @@ class BytebeatSystem {
                             article.appendChild(error);
                             return;
                         }
-                        data.json().then(A => {
-                            for (const i of A) {
-                                this.generateEntry(i, list);
+                        data.bytes().then(async(A) => {
+                            // for (const i of A) {
+                            //     this.generateEntry(i, list);
+                            // }
+                            const authors = JSON.parse(pako.ungzip(A, { to: 'string' }));
+                            for(const _author of authors) {
+                                const author = _author as LibraryAuthor;
+                                const { songs } = author;
+                                const box = document.createElement('li');
+                                box.classList.add('library-author-container');
+                                const lu = document.createElement('span');
+                                const songList = document.createElement('ul');
+                                for(let i of songs) {
+                                    this.generateSongDetails(i,songList);
+                                }
+                                const ll = document.createElement('span');
+                                ll.innerText=lu.innerText=author.author||"<no author>";
+                                box.appendChild(lu);
+                                box.appendChild(songList);
+                                box.appendChild(ll);
+                                list.appendChild(box);
                             }
                             loading.remove();
                         });
@@ -581,20 +679,20 @@ class BytebeatSystem {
 
     loadCodeDollchan(code: string, SR: number, mode: soundMode) {
         let range: soundRange, method: compilationMethod;
-        switch (mode) {
-            case "Bytebeat": default:
+        switch (mode.toLowerCase().trim()) {
+            case "bytebeat": default:
                 range = soundRange.u8;
                 method = compilationMethod.expression;
                 break;
-            case "Signed Bytebeat":
+            case "signed bytebeat":
                 range = soundRange.s8;
                 method = compilationMethod.expression;
                 break;
-            case "Floatbeat":
+            case "floatbeat":
                 range = soundRange.f;
                 method = compilationMethod.expression;
                 break;
-            case "Funcbeat":
+            case "funcbeat":
                 range = soundRange.f;
                 method = compilationMethod.statement;
                 break;
@@ -633,7 +731,7 @@ class BytebeatSystem {
         }
         let M = (elem.getAttribute('mode')??soundMode.u8) as soundMode;
 
-        fetch(F, { cache: "no-cache" }).then(data => {
+        tauriFetch(F, { cache: "no-cache" }).then(data => {
             if (!data.ok) {
                 elem.innerText = `HTTP ${data.status}`
                 setTimeout(() => { elem.innerText = oldText }, 1000);

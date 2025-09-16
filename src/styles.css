@@ -50,14 +50,22 @@ body {
 	display: inline-block;
 }
 
-#io,
-#library {
+#right-box {
 	width: calc(100% - 24px);
 	max-width: calc(100% - 24px);
 	margin: 4px;
 	border: 4px ridge white;
 	padding: 4pt;
 	height: calc(100vh - 40px);
+	overflow-y: scroll;
+	word-wrap: break-word;
+	font-size: small;
+}
+
+.library-author-container {
+	margin: 4px 0;
+	border: 4px ridge white;
+	padding: 4pt;
 	overflow-y: scroll;
 	word-wrap: break-word;
 	font-size: small;
@@ -252,4 +260,14 @@ body {
 
 .code:hover {
 	color: #b014df !important;
+}
+
+a {
+	color: #06eaec;
+	text-decoration: underline;
+}
+
+a:visited {
+	color: #e807ec;
+	text-decoration: underline;
 }
