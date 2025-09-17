@@ -70,14 +70,86 @@ body {
 	font-size: 10pt;
 }
 
+.library-author-container-1, #library-dollchan {
+	animation: diagonal-move-right linear infinite;
+	background-size: 225pt 225pt;
+	background-position-x: -28.2842pt;
+}
+
 .library-author-container-1 {
-	border: 4px ridge rgb(99, 255, 99);
+	border: 4px ridge #63ff63;
+	background-color: transparent;
+	background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(23, 56, 23, 0.5),
+      rgba(23, 56, 23, 0.5) 10pt,
+      rgba(29, 71, 29, 0.5) 10pt,
+      rgba(29, 71, 29, 0.5) 20pt
+    );
+	animation-duration: 2s;
+}
+
+#library-dollchan {
+	border: 4px ridge #475d8f;
 	background-color: #204d20;
+	background-image:
+    repeating-linear-gradient(
+      45deg,
+      #344363,
+      #344363 10pt,
+      #405074 10pt,
+      #405074 20pt
+    );
+	animation-duration: 5s;
+}
+
+.library-author-container-2, #library-chasyxx {
+	animation: diagonal-move-left linear infinite;
+	background-size: 225pt 225pt;
+	background-position-x: 28.2842pt;
 }
 
 .library-author-container-2 {
-	border: 4px ridge rgb(79, 135, 255);
-	background-color: #121241;
+	border: 4px ridge #4f87ff;
+	background-color: transparent;
+	background-image:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(18, 18, 65, 0.5),
+      rgba(18, 18, 65, 0.5) 10pt,
+      rgba(26, 26, 87, 0.5) 10pt,
+      rgba(26, 26, 87, 0.5) 20pt
+    );
+	animation-duration: 2s;
+}
+
+#library-chasyxx {
+	border: 4px ridge #4c8845;
+	background-color: #204d20;
+	background-size: 225pt 225pt;
+	background-position-x: 28.2842pt;
+	background-image:
+    repeating-linear-gradient(
+      -45deg,
+      #396334,
+      #396334 10pt,
+      #457540 10pt,
+      #457540 20pt
+    );
+	animation-duration: 5s;
+}
+
+@keyframes diagonal-move-right {
+	to {
+		background-position-x: 28.2842pt;
+	}
+}
+
+@keyframes diagonal-move-left {
+	to {
+		background-position-x: -28.2842pt;
+	}
 }
 
 .library-remix-container {
@@ -181,7 +253,7 @@ body {
 	color:#45ff7d;
 }
 
-.control-select {
+.control-select, .library-select {
 	background-color: #0f1f3f;
 }
 
@@ -195,18 +267,28 @@ body {
 }
 
 .control-button,
-.control-select {
+.control-select,
+.library-select {
 	margin: 0;
-	height: 17pt;
-	width: 32pt;
 	background-image: linear-gradient(to bottom, #0f1f3f, #1f3f8f);
 	color: white;
-	display: inline-block;
-	flex-grow: 1;
 	border: 1px solid white;
-	align-self: stretch;
 	appearance: none;
 	border-radius: 0;
+	font: 10pt tomo;
+}
+
+.control-button,
+.control-select {
+	height: 17pt;
+	width: 32pt;
+	display: inline-block;
+	flex-grow: 1;
+	align-self: stretch;
+}
+
+.library-select {
+	padding: 2pt;
 }
 
 .warning {
@@ -224,6 +306,7 @@ body {
 	flex-grow: 1;
 	border: 1px solid white;
 	align-self: stretch;
+	font: 10pt tomo;
 }
 
 #volume-container {
@@ -295,11 +378,11 @@ body {
 }
 
 .code {
-	color: #dfaf14 !important;
+	color: #ffdd6e !important;
 }
 
 .code:hover {
-	color: #b014df !important;
+	color: #e07aff !important;
 }
 
 a {

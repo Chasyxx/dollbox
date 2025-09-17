@@ -137,6 +137,21 @@ type LibraryAuthor = {
     songs: LibrarySong[];
 };
 
+const libraryLinks = {
+    dollchan: {
+        library: "https://dollchan.net/bytebeat/data/library/",
+        songs: "https://dollchan.net/bytebeat/data/songs/",
+        all: "https://dollchan.net/bytebeat/data/library/all.gz",
+    },
+    chasyxx: {
+        library: "https://chasyxx.github.io/EnBeat_NEW/data/library/",
+        songs: "https://chasyxx.github.io/EnBeat_NEW/data/songs/",
+        all: "https://chasyxx.github.io/EnBeat_NEW/data/library/all.gz",
+    }
+} as const;
+
+type libraryOption = keyof typeof libraryLinks;
+
 class BytebeatSystem {
     SR: number;
     audioNode: AudioWorkletNode | null;
@@ -166,11 +181,13 @@ class BytebeatSystem {
         dataCreate: null | HTMLButtonElement,
         dataLoad: null | HTMLButtonElement,
         data: null | HTMLTextAreaElement,
-        t: null | HTMLDivElement
+        t: null | HTMLDivElement,
+        librarySelector: null | HTMLSelectElement
     };
     libraryCache: Map<string, LibrarySong>;
     visualiserPoints: visualiserPoint[];
     waveformLast: [number, number];
+    currentLibrary: libraryOption;
     constructor() {
         this.SR = 8000;
         this.audioNode = null;
@@ -200,11 +217,13 @@ class BytebeatSystem {
             dataCreate: null,
             dataLoad: null,
             data: null,
-            t: null
+            t: null,
+            librarySelector: null
         };
         this.visualiserPoints = [];
         this.waveformLast = [0, 0];
         this.libraryCache = new Map();
+        this.currentLibrary = 'dollchan';
     }
 
     static mod(a: number, b: number): number {
@@ -356,7 +375,8 @@ class BytebeatSystem {
         this.elements.dataCreate = document.getElementById('make-data') as typeof this.elements.dataCreate;
         this.elements.dataLoad = document.getElementById('load-data') as typeof this.elements.dataLoad;
         this.elements.data = document.getElementById('data') as typeof this.elements.data;
-        this.elements.t = document.getElementById('t') as typeof this.elements.t
+        this.elements.t = document.getElementById('t') as typeof this.elements.t;
+        this.elements.librarySelector = document.getElementById('library-select') as typeof this.elements.librarySelector
     }
 
     safe(a: string) {
@@ -405,7 +425,7 @@ class BytebeatSystem {
         if(entry.remix && entry.remix.length > 0) {
             for(const remix of entry.remix) {
                 if(remix.url) {
-                    res += `<br>Remix of <a href=${this.safe(remix.url)}>${this.safe(remix.name)}`
+                    res += `<br>Remix of <a target="_blank" href=${this.safe(remix.url)}>&quot;${this.safe(remix.name)}&quot;`
                     if(remix.author) res += ` by ${this.safe(remix.author)}`;
                     res += '</a>';
                 } else {
@@ -413,14 +433,18 @@ class BytebeatSystem {
                     if(remix.author) res += ` by ${this.safe(remix.author)}`;
                     res += '</span>'
                 }
-                res += ` <button class="library-remix-button" id="${entry.hash}-${remix.hash}" title="Open this remix's entry">&gt;</button>`+
-                `<div class="library-remix-container hide" id="${entry.hash}-${remix.hash}-container"></div>`;
+                res += ` <button class="library-remix-button" id="${this.currentLibrary}-${entry.hash}-${remix.hash}" title="Open this remix's entry">&gt;</button>`+
+                `<div class="library-remix-container hide" id="${this.currentLibrary}-${entry.hash}-${remix.hash}-container"></div>`;
             }
         }
 
         // Cover details
         if(entry.coverName) {
-            res += `<br>Cover of <a href=${entry.coverUrl!}>${this.safe(entry.coverName)}</a>`;
+            if(entry.coverUrl) {
+                res += `<br>Cover of <a href=${entry.coverUrl} target="_blank">&quot;${this.safe(entry.coverName)}&quot;</a>`;
+            } else {
+                res += `<br>Cover of &quot;${this.safe(entry.coverName)}&quot;`;
+            }
         }
 
         // Add the information area if needed
@@ -431,8 +455,8 @@ class BytebeatSystem {
             // Add functionalty to remix buttons if needed
             if(entry.remix && entry.remix.length > 0) {
                 for(const remix of entry.remix) {
-                    const button: HTMLButtonElement | null = infoSpan.querySelector("#"+CSS.escape(entry.hash+"-"+remix.hash));
-                    const container: HTMLDivElement | null = infoSpan.querySelector("#"+CSS.escape(entry.hash+"-"+remix.hash+"-container"));
+                    const button: HTMLButtonElement | null = infoSpan.querySelector("#"+CSS.escape(this.currentLibrary+"-"+entry.hash+"-"+remix.hash));
+                    const container: HTMLDivElement | null = infoSpan.querySelector("#"+CSS.escape(this.currentLibrary+"-"+entry.hash+"-"+remix.hash+"-container"));
                     if(button === null || container === null) {
                         console.warn("Elements null!? "+remix.name);
                         continue;
@@ -442,11 +466,11 @@ class BytebeatSystem {
                             button.innerText="<";
                             container.classList.remove("hide");
                             if(!container.hasAttribute("loaded")) {
-                                let entry = this.libraryCache.get(remix.hash);
+                                let entry = this.libraryCache.get(this.currentLibrary+"-"+remix.hash);
                                 if(entry===undefined) {
                                     container.innerText = "Hang on...";
                                     this.cacheAllLibraryEntries().then(()=>{
-                                        entry = this.libraryCache.get(remix.hash);
+                                        entry = this.libraryCache.get(this.currentLibrary+"-"+remix.hash);
                                         if(entry===undefined) {
                                             container.innerText = "This remix isn't in the library.";
                                             return;
@@ -527,15 +551,15 @@ class BytebeatSystem {
             }
 
             if (entry.fileMin) {
-                addCodeLink("Minified "+formatBytes(entry.codeMinLen??0), `https://dollchan.net/bytebeat/data/songs/minified/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
+                addCodeLink("Minified "+formatBytes(entry.codeMinLen??0), libraryLinks[this.currentLibrary].songs+`minified/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
 
             if (entry.fileOrig) {
-                addCodeLink("Original "+formatBytes(entry.codeLen??0), `https://dollchan.net/bytebeat/data/songs/original/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
+                addCodeLink("Original "+formatBytes(entry.codeLen??0), libraryLinks[this.currentLibrary].songs+`original/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
 
             if (entry.fileForm) {
-                addCodeLink("Formatted "+formatBytes(entry.codeFormLen??0), `https://dollchan.net/bytebeat/data/songs/formatted/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
+                addCodeLink("Formatted "+formatBytes(entry.codeFormLen??0), libraryLinks[this.currentLibrary].songs+`formatted/${entry.hash}.js`, entry.sampleRate ?? 8000, entry.mode ?? soundMode.u8);
             }
             entryContainer.appendChild(buttonRow);
         }
@@ -634,6 +658,21 @@ class BytebeatSystem {
         this.elements.dataCreate!.addEventListener('click', () => { this.createData() });
         this.elements.dataLoad!.addEventListener('click', () => { this.loadData() });
 
+        this.elements.librarySelector!.addEventListener('change', ()=>{
+            const library = this.elements.librarySelector!.value as libraryOption;
+            this.currentLibrary = library;
+            const selections = document.getElementsByClassName('library-selection');
+            for(let i = 0; i < selections.length; i++) {
+                const selection = selections.item(i)! as HTMLDivElement;
+                const selectionLibrary = selection.id.replace('library-','');
+                if(library===selectionLibrary) {
+                    selection.classList.remove("hide");
+                } else {
+                    selection.classList.add("hide");
+                }
+            }
+        })
+
         // Obsolete in Tauri
         // this.elements.loadButton!.addEventListener('click', async () => {
         //     const data = await window.elecAPI.load();
@@ -661,10 +700,10 @@ class BytebeatSystem {
                     header.querySelector('.library-errortext')?.remove();
                     loading.classList.remove('hide');
                     let article = header.querySelector('.library-content')!;
-                    let path = article.id.replace("library-", '');
+                    let path = article.id.replace(/.+?--/g, '');
                     let list = document.createElement('ul');
                     article.appendChild(list);
-                    tauriFetch(`https://dollchan.net/bytebeat/data/library/${path}.gz`, { cache: 'no-cache' }).then(data => {
+                    tauriFetch(libraryLinks[header.getAttribute('library')! as libraryOption].library+`${path}.gz`, { cache: 'no-cache' }).then(data => {
                         if (!data.ok) {
                             loading.classList.add('hide');
                             header.removeAttribute('loaded');
@@ -686,7 +725,7 @@ class BytebeatSystem {
                                 const label = document.createElement('span');
                                 const songList = document.createElement('ul');
                                 for(let song of songs) {
-                                    this.libraryCache.set(song.hash,song);
+                                    this.libraryCache.set(this.currentLibrary+"-"+song.hash,song);
                                     const listEntry = document.createElement('li');
                                     listEntry.classList.add("library-entry");
                                     this.generateSongDetails(song,listEntry);
@@ -727,7 +766,7 @@ class BytebeatSystem {
 
     cacheAllLibraryEntries() {
         return new Promise<void>((resolve,reject)=>{
-            tauriFetch(`https://dollchan.net/bytebeat/data/library/all.gz`, { cache: 'no-cache' }).then(data => {
+            tauriFetch(libraryLinks[this.currentLibrary].all, { cache: 'no-cache' }).then(data => {
                 if (!data.ok) {
                     console.error("Couldn't cache all of the library entries due to status code "+data.status);
                     reject("HTTP "+data.status);
@@ -739,7 +778,7 @@ class BytebeatSystem {
                         const author = _author as LibraryAuthor;
                         const { songs } = author;
                         for(const song of songs) {
-                            this.libraryCache.set(song.hash,song);
+                            this.libraryCache.set(this.currentLibrary+"-"+song.hash,song);
                         }
                     }
                     resolve();

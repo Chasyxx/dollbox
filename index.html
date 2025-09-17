@@ -79,8 +79,8 @@
       </div>
       <div id="visual-container">
         <canvas width="512" height="256" id="waveform"></canvas>
-          <canvas width="512" height="256" id="diagram" class="hide"></canvas>
-          <canvas width="512" height="256" id="fft" class="hide"></canvas>
+        <canvas width="512" height="256" id="diagram" class="hide"></canvas>
+        <canvas width="512" height="256" id="fft" class="hide"></canvas>
       </div>
     </div>
     <div id="main-right">
@@ -88,54 +88,113 @@
         <div id="library">
           <h1>Library loader</h1>
           <header>This area loads <a href="https://dollchan.net/bytebeat/">DollChan</a>-compatible libraries.</header>
-          <details class="library-part">
-            <summary class="library-head">
-              C compatible codes<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-classic" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              JS codes &lt;256B<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-js-256" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              JS codes between<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-js-1k" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              JS codes &gt;1KiB<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-js-big" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              Floatbeat codes (-1 to 1)<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-floatbeat" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              Floatbeat &gt;1KiB<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-floatbeat-big" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              Funcbeat codes<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-funcbeat" class="library-content"></div>
-          </details>
-          <details class="library-part">
-            <summary class="library-head">
-              All codes in dE<span class="loading hide"> (Loading...)</span>
-            </summary>
-            <div id="library-all" class="library-content"></div>
-          </details>
+          <label for="library-select">Select a library: </label><select class="library-select" id="library-select">
+            <option value="dollchan" selected>Dollchan</option>
+            <option value="chasyxx">Chasyxx</option>
+          </select>
+
+          <div class="library-selection" id="library-dollchan">
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                C compatible codes<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--classic" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                JS codes &lt;256B<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--js-256" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                JS codes between<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--js-1k" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                JS codes &gt;1KiB<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--js-big" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                Floatbeat codes (-1 to 1)<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--floatbeat" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                Floatbeat &gt;1KiB<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--floatbeat-big" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                Funcbeat codes<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--funcbeat" class="library-content"></div>
+            </details>
+            <details class="library-part" library="dollchan">
+              <summary class="library-head">
+                All codes on Dollchan<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library--all" class="library-content"></div>
+            </details>
+          </div>
+
+          <div class="library-selection hide" id="library-chasyxx">
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                C compatible codes<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--classic" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                JS codes &lt;256B<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--js-256" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                JS codes between<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--js-1k" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                JS codes &gt;1KiB<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--js-big" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                Floatbeat codes (-1 to 1)<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--floatbeat" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                Floatbeat &gt;1KiB<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--floatbeat-big" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                Funcbeat codes<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--funcbeat" class="library-content"></div>
+            </details>
+            <details class="library-part" library="chasyxx">
+              <summary class="library-head">
+                All codes on Chasyxx<span class="loading hide"> (Loading...)</span>
+              </summary>
+              <div id="library-chasyxx--all" class="library-content"></div>
+            </details>
+          </div>
+          
         </div>
         <hr>
         <div>
@@ -146,7 +205,7 @@
           <div class="flex"><button id="load-data">Load data...</button><button id="make-data">Generate
               data...</button></div>
           <textarea id="data">Data goes here...</textarea>
-          <br>          
+          <br>
         </div>
         <hr>
         <div>
@@ -157,15 +216,17 @@
           <button id="button-save">Save a File</button>
         </div>
         <hr>
-        <div>        
+        <div>
           <h1>GNU AGPL disclaimers</h1>
           <details>
             <summary>Warranty disclaimer</summary>
             <article>THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
               OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM “AS IS” WITHOUT
-              WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+              WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+              OF
               MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF
-              THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
+              THE PROGRAM IS WITH YOU. SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY
+              SERVICING,
               REPAIR OR CORRECTION.</article>
           </details>
           <details>

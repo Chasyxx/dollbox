@@ -10,7 +10,16 @@
     "identifier": "http:default",
       "allow": [
         {
-          "url": "https://dollchan.net"
+          "url": "http://*"
+        },
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://*:*"
+        },
+        {
+          "url": "https://*:*"
         }
       ]
     }
