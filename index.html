@@ -28,6 +28,10 @@
 
 <body>
   <p id="loading-status">(JavaScript not loaded. Please turn it on.)</p>
+  <dialog id="dialog-alert">
+    <p id="dialog-alert-text">Alert!</p>
+    <button class="control-button-2" id="dialog-alert-ok">OK</button>
+  </dialog>
   <div class="flex">
     <div id="main-left">
       <textarea id="code-area">t*((t&gt;&gt;12|t&gt;&gt;8)&amp;63&amp;t&gt;&gt;4)
@@ -61,7 +65,7 @@
         <button class="control-button noright" id="forward-button">
           &gt;x<span id="forward-speed">1</span>
         </button>
-        <input type="number" class="control-number" value="8000" id="samplerate">
+        <input type="number" class="control-input" value="8000" id="samplerate">
         <div id="volume-container"><input id="volume-slider" type="range" min="0" max="100" value="50"></div>
       </div>
       <div class="flex controls-container">
@@ -87,8 +91,8 @@
       <div id="right-box">
         <div id="library">
           <h1>Library loader</h1>
-          <header>This area loads <a href="https://dollchan.net/bytebeat/">DollChan</a>-compatible libraries.</header>
-          <label for="library-select">Select a library: </label><select class="library-select" id="library-select">
+          <header>This area loads <a href="https://dollchan.net/bytebeat/" target="_blank">DollChan</a>-compatible libraries.</header>
+          <label for="library-select">Select a library: </label><select class="control-select-2" id="library-select">
             <option value="dollchan" selected>Dollchan</option>
             <option value="chasyxx">Chasyxx</option>
           </select>
@@ -194,7 +198,51 @@
               <div id="library-chasyxx--all" class="library-content"></div>
             </details>
           </div>
-          
+          <div id="library-search">
+            <details>
+              <summary id="library-search-summary">
+                Search through cached codes
+              </summary>
+              <div id="library-panel">
+                <button class="control-button-2" id="library-search-cache-current" title="Cache all songs in the current library">Cache all</button>
+                <button class="control-button-2" id="library-search-go" title="Start the search">GO</button>
+                <label for="filter-filter-select">Add a filter: </label>
+                <select class="control-select-2" id="library-filter-select">
+                  <option value="name" selected>Name</option>
+                  <option value="author">Author</option>
+                  <option value="description">Description</option>
+                  <option value="samplerate">Sample rate</option>
+                  <option value="sampleratemin">Minimum sample rate</option>
+                  <option value="sampleratemax">Maximum sample rate</option>
+                  <option value="mode">Sound mode</option>
+                  <option value="sizemin">Minimum size</option>
+                  <option value="sizemax">Maximum size</option>
+                  <option value="sizeminmin">Minified minimum size</option>
+                  <option value="sizemaxmin">Minified maximum size</option>
+                  <option value="sizeminform">Formatted minimum size</option>
+                  <option value="sizemaxform">Formatted maximum size</option>
+                  <option value="origpresent">Original code present</option>
+                  <option value="minpresent">Minified code present</option>
+                  <option value="formpresent">Formatted code present</option>
+                  <option value="rating">Rating</option>
+                  <option value="tags">Tags</option>
+                </select>
+                has/is
+                <input type="text" class="control-input-2" value="" placeholder="The 42 melody" id="library-filter-value">
+                <button class="control-button-2" id="library-filter-add">Add</button>
+              </div>
+              <div id="library-search-filters">
+                <span>Filters:</span>
+                <div class="library-search-filter">
+                  Add filters to narrow your results!
+                </div>
+              </div>
+              <span id="library-search-result-count">N/A results</span>
+              <hr id="library-search-seperator">
+              <ul id="library-search-output"></ul>
+            </div>
+          </details>
+
         </div>
         <hr>
         <div>

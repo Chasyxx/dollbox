@@ -77,7 +77,7 @@ type LibrarySong = {
      * Used to grab remixes and files.
      */
     hash: string,
-    name: string,
+    name?: string,
     description?: string,
     /** Source URL. */
     url?: string | string[],
@@ -120,8 +120,10 @@ type LibrarySong = {
     /** Additional tags in code. */
     tags: string[],
     rating?: starRating,
-    /** The library admin that added this song. */
-    user_added: string,
+    /** When the song was added to the library. */
+    date_added: string,
+    /** When the song was last edited in the library. */
+    date_edited: string,
     /** List of songs whose inspiration or code were used in this one. */
     remix?: LibraryRemixLink[],
     /** External music peice that was covered. */
@@ -129,8 +131,121 @@ type LibrarySong = {
     coverUrl?: string,
     /** YYYY-MM-DD. */
     date?: `${number}-${number}-${number}`,
-    stereo?: boolean
+    stereo?: boolean,
+
+    /** This is not present in the raw library data; It is inserted into the cache hashmap though. */
+    author?: string
 };
+
+type LibraryNameSearchFilter = {
+    type: "name",
+    value: string
+}
+
+type LibraryAuthorSearchFilter = {
+    type: "author",
+    value: string
+}
+
+type LibraryDescriptionSearchFilter = {
+    type: "description",
+    value: string
+}
+
+type LibrarySamplerateSearchFilter = {
+    type: "samplerate",
+    value: number
+}
+
+type LibraryMinimumSamplerateSearchFilter = {
+    type: "sampleratemin",
+    value: number
+}
+
+type LibraryMaximumSamplerateSearchFilter = {
+    type: "sampleratemax",
+    value: number
+}
+
+type LibraryModeSearchFilter = {
+    type: "mode",
+    value: soundMode
+}
+
+type LibraryMinimumSizeSearchFilter = {
+    type: "sizemin",
+    value: number
+}
+
+type LibraryMaximumSizeSearchFilter = {
+    type: "sizemax",
+    value: number
+}
+
+type LibraryMinifiedMinimumSizeSearchFilter = {
+    type: "sizeminmin",
+    value: number
+}
+
+type LibraryMinifiedMaximumSizeSearchFilter = {
+    type: "sizemaxmin",
+    value: number
+}
+
+type LibraryFormattedMinimumSizeSearchFilter = {
+    type: "sizeminform",
+    value: number
+}
+
+type LibraryFormattedMaximumSizeSearchFilter = {
+    type: "sizemaxform",
+    value: number
+}
+
+type LibraryOriginalCodePresentSearchFilter = {
+    type: "origpresent",
+    value: boolean
+}
+
+type LibraryMinifiedCodePresentSearchFilter = {
+    type: "minpresent",
+    value: boolean
+}
+
+type LibraryFormattedCodePresentSearchFilter = {
+    type: "formpresent",
+    value: boolean
+}
+
+type LibraryRatingSearchFilter = {
+    type: "rating",
+    value: starRating
+}
+
+type LibraryTagSearchFilter = {
+    type: "tags",
+    value: string
+}
+
+type LibrarySearchFilter =
+    LibraryNameSearchFilter |
+    LibraryAuthorSearchFilter |
+    LibraryDescriptionSearchFilter |
+    LibrarySamplerateSearchFilter |
+    LibraryMinimumSamplerateSearchFilter |
+    LibraryMaximumSamplerateSearchFilter |
+    LibraryModeSearchFilter |
+    LibraryMinimumSizeSearchFilter |
+    LibraryMaximumSizeSearchFilter |
+    LibraryMinifiedMinimumSizeSearchFilter |
+    LibraryMinifiedMaximumSizeSearchFilter |
+    LibraryFormattedMinimumSizeSearchFilter |
+    LibraryFormattedMaximumSizeSearchFilter |
+    LibraryOriginalCodePresentSearchFilter |
+    LibraryMinifiedCodePresentSearchFilter |
+    LibraryFormattedCodePresentSearchFilter |
+    LibraryRatingSearchFilter |
+    LibraryTagSearchFilter
 
 type LibraryAuthor = {
     author: string;
@@ -182,9 +297,21 @@ class BytebeatSystem {
         dataLoad: null | HTMLButtonElement,
         data: null | HTMLTextAreaElement,
         t: null | HTMLDivElement,
-        librarySelector: null | HTMLSelectElement
+        librarySelector: null | HTMLSelectElement,
+        cacheAllLibraryEntriesButton: null | HTMLButtonElement,
+        startLibrarySearch: null | HTMLButtonElement,
+        librarySearchResultCount: null | HTMLSpanElement,
+        librarySearchOutput: null | HTMLUListElement,
+        libraryFilterTypeSelect: null | HTMLSelectElement,
+        libraryFilterValue: null | HTMLInputElement,
+        libraryFilterAddButton: null | HTMLButtonElement,
+        alertDialog: null | HTMLDialogElement,
+        alertDialogText: null | HTMLParagraphElement,
+        alertDialogOKButton: null | HTMLButtonElement,
+        libraryFilters: null | HTMLDivElement
     };
     libraryCache: Map<string, LibrarySong>;
+    librarySearchFilters: LibrarySearchFilter[];
     visualiserPoints: visualiserPoint[];
     waveformLast: [number, number];
     currentLibrary: libraryOption;
@@ -218,11 +345,23 @@ class BytebeatSystem {
             dataLoad: null,
             data: null,
             t: null,
-            librarySelector: null
+            librarySelector: null,
+            cacheAllLibraryEntriesButton: null,
+            startLibrarySearch: null,
+            librarySearchResultCount: null,
+            librarySearchOutput: null,
+            libraryFilterTypeSelect: null,
+            libraryFilterValue: null,
+            libraryFilterAddButton: null,
+            alertDialog: null,
+            alertDialogText: null,
+            alertDialogOKButton: null,
+            libraryFilters: null
         };
         this.visualiserPoints = [];
         this.waveformLast = [0, 0];
         this.libraryCache = new Map();
+        this.librarySearchFilters = [];
         this.currentLibrary = 'dollchan';
     }
 
@@ -352,7 +491,7 @@ class BytebeatSystem {
         }
     }
 
-    getElementsById() {
+    getElementsByIds() {
         this.elements.samplerate = document.getElementById('samplerate') as typeof this.elements.samplerate;
         this.elements.canvasWaveform = document.getElementById('waveform') as typeof this.elements.canvasWaveform;
         this.elements.toggleWaveform = document.getElementById('toggle-waveform') as typeof this.elements.toggleWaveform;
@@ -376,7 +515,54 @@ class BytebeatSystem {
         this.elements.dataLoad = document.getElementById('load-data') as typeof this.elements.dataLoad;
         this.elements.data = document.getElementById('data') as typeof this.elements.data;
         this.elements.t = document.getElementById('t') as typeof this.elements.t;
-        this.elements.librarySelector = document.getElementById('library-select') as typeof this.elements.librarySelector
+        this.elements.librarySelector = document.getElementById('library-select') as typeof this.elements.librarySelector;
+
+
+        this.elements.cacheAllLibraryEntriesButton = document.getElementById('library-search-cache-current') as
+            typeof this.elements.cacheAllLibraryEntriesButton;
+
+        this.elements.startLibrarySearch = document.getElementById('library-search-go') as
+            typeof this.elements.startLibrarySearch;
+
+        this.elements.librarySearchOutput = document.getElementById('library-search-output') as
+            typeof this.elements.librarySearchOutput;
+
+        this.elements.librarySearchResultCount = document.getElementById('library-search-result-count') as
+            typeof this.elements.librarySearchResultCount;
+
+        this.elements.libraryFilterTypeSelect = document.getElementById('library-filter-select') as
+            typeof this.elements.libraryFilterTypeSelect;
+
+        this.elements.libraryFilterValue = document.getElementById('library-filter-value') as
+            typeof this.elements.libraryFilterValue;
+
+        this.elements.libraryFilterAddButton = document.getElementById('library-filter-add') as
+            typeof this.elements.libraryFilterAddButton;
+
+        this.elements.alertDialog = document.getElementById('dialog-alert') as
+            typeof this.elements.alertDialog;
+
+        this.elements.alertDialogText = document.getElementById('dialog-alert-text') as
+            typeof this.elements.alertDialogText;
+
+        this.elements.alertDialogOKButton = document.getElementById('dialog-alert-ok') as
+            typeof this.elements.alertDialogOKButton;
+
+        this.elements.libraryFilters = document.getElementById('library-search-filters') as
+            typeof this.elements.libraryFilters;
+    }
+
+    alert(text: string, buttonText: string = "Okay") {
+        return new Promise<void>(resolve=>{
+            this.elements.alertDialogText!.innerText = text;
+            this.elements.alertDialogOKButton!.innerText = buttonText;
+            this.elements.alertDialogOKButton!.addEventListener('click',()=>{
+                this.elements.alertDialog!.close();
+                resolve();
+            }, { once: true });
+            this.elements.alertDialog!.showModal();
+            this.elements.alertDialogOKButton?.focus();
+        });
     }
 
     safe(a: string) {
@@ -409,6 +595,8 @@ class BytebeatSystem {
             }
         }
 
+        if(entry.author) res += ` by ${this.safe(entry.author)}`;
+
         // Samplerate, mode, stereo
         if (entry.sampleRate && entry.sampleRate !== 8000 || (entry.mode && entry.mode !== soundMode.u8))
             res += " @"
@@ -433,7 +621,7 @@ class BytebeatSystem {
                     if(remix.author) res += ` by ${this.safe(remix.author)}`;
                     res += '</span>'
                 }
-                res += ` <button class="library-remix-button" id="${this.currentLibrary}-${entry.hash}-${remix.hash}" title="Open this remix's entry">&gt;</button>`+
+                res += ` <button class="library-remix-button remix-button-closed" id="${this.currentLibrary}-${entry.hash}-${remix.hash}" title="Open this remix's entry">Open</button>`+
                 `<div class="library-remix-container hide" id="${this.currentLibrary}-${entry.hash}-${remix.hash}-container"></div>`;
             }
         }
@@ -463,7 +651,10 @@ class BytebeatSystem {
                     }
                     button.addEventListener('click',()=>{
                         if(container.classList.contains("hide")) {
-                            button.innerText="<";
+                            button.innerText="Close";
+                            button.classList.remove("remix-button-closed");
+                            button.classList.add("remix-button-opened");
+                            button.title = "Close this remix's entry";
                             container.classList.remove("hide");
                             if(!container.hasAttribute("loaded")) {
                                 let entry = this.libraryCache.get(this.currentLibrary+"-"+remix.hash);
@@ -488,7 +679,10 @@ class BytebeatSystem {
                                 }
                             }
                         } else {
-                            button.innerText=">";
+                            button.innerText="Open";
+                            button.classList.remove("remix-button-opened");
+                            button.classList.add("remix-button-closed");
+                            button.title = "Open this remix's entry";
                             container.classList.add("hide");
                         }
                     })
@@ -565,6 +759,126 @@ class BytebeatSystem {
         }
     }
 
+    async librarySearch() {
+        this.elements.librarySearchOutput!.innerHTML="";
+        await new Promise<void>((resolve)=>{
+            setTimeout(resolve,100);
+        });
+        let results = 0;
+        // let lastMs = Date.now();
+        let count = 0;
+        for(const i of this.libraryCache) {
+            try {
+                const entry = i[1];
+                // const addEntry=(resolve?: Function)=>{
+                //     return async()=>{
+                //         const li = document.createElement('li');
+                //         li.classList.add("library-entry");
+                //         await this.generateSongDetails(entry,li);
+                //         this.elements.librarySearchOutput!.appendChild(li);
+                //         if(resolve) resolve();
+                //     }
+                // };
+                let statusName: boolean | null = null;
+                let statusAuthor: boolean | null = null;
+                let statusMode: boolean | null = null;
+                let statusRating: boolean | null = null;
+                entry.sampleRate||=8000;
+                let failiure: boolean = false;
+                for(const filter of this.librarySearchFilters) {
+                    switch(filter.type) {
+                        // case 'name': case 'author': case 'description': {
+                        //     const val = entry[filter.type]??"";
+                        //     if(!superStr.includes(subStr)) break;
+                        // } break;
+                        case 'name': {
+                            statusName??=false;
+                            if(entry.name===undefined) break;
+                            const superStr = entry.name.toLowerCase().replace(/\s/g,'');
+                            const subStr = filter.value.toLowerCase().replace(/\s/g,'');
+                            statusName||=superStr.includes(subStr);
+                        } break;
+                        case 'author': {
+                            statusAuthor??=false;
+                            if(entry.author===undefined) break;
+                            const superStr = entry.author.toLowerCase().replace(/\s/g,'');
+                            const subStr = filter.value.toLowerCase().replace(/\s/g,'');
+                            if(superStr!==undefined) statusAuthor||=superStr.includes(subStr);
+                        } break;
+                        case 'description': {
+                            statusAuthor??=false;
+                            if(entry.description===undefined) break;
+                            const superStr = entry.description.toLowerCase().replace(/\s/g,'');
+                            const subStr = filter.value.toLowerCase().replace(/\s/g,'');
+                            if(superStr===undefined||!(superStr.includes(subStr))) failiure = true;
+                        } break;
+                        case 'samplerate': if(entry.sampleRate!==filter.value) failiure = true; break;
+                        case 'sampleratemin': if(entry.sampleRate<filter.value) failiure = true; break;
+                        case 'sampleratemax': if(entry.sampleRate>filter.value) failiure = true; break;
+                        case 'mode': {
+                            statusMode ??= false;
+                            statusMode ||= (entry.mode??soundMode.u8) === filter.value;
+                        } break;
+                        case 'sizemin': if((entry.codeLen??0)<filter.value) failiure = true; break;
+                        case 'sizemax': if((entry.codeLen??Number.POSITIVE_INFINITY)>filter.value) failiure = true; break;
+                        case 'sizeminmin': if((entry.codeMinLen??0)<filter.value) failiure = true; break;
+                        case 'sizemaxmin': if((entry.codeMinLen??Number.POSITIVE_INFINITY)>filter.value) failiure = true; break;
+                        case 'sizeminform': if((entry.codeFormLen??0)<filter.value) failiure = true; break;
+                        case 'sizemaxform': if((entry.codeFormLen??Number.POSITIVE_INFINITY)>filter.value) failiure = true; break;
+                        case 'origpresent': if(!(entry.code||entry.codeLen||entry.fileOrig)) failiure = true; break;
+                        case 'minpresent': if(!(entry.codeMin||entry.codeMinLen||entry.fileMin)) failiure = true; break;
+                        case 'formpresent': if(!(entry.codeForm||entry.codeForm||entry.fileForm)) failiure = true; break;
+                        case 'rating': {
+                            statusRating ??= false;
+                            statusRating ||= (entry.rating??starRating.none) === filter.value;
+                        } break;
+                        case 'tags': {
+                            if(!(entry.tags.includes(filter.value))) failiure = true;
+                        } break;
+                        // @ts-ignore - this is an error handler for an invalid type, of course it would be never
+                        default: this.alert("Unknown filter type "+filter.type+"\nThis is a bug in DOLLBOX. Please report it to the dev(s).")
+                    }
+                    if(failiure) break;
+                }
+                if(failiure) continue;
+                if(
+                    statusName===false||
+                    statusAuthor===false||
+                    statusMode===false||
+                    statusRating===false
+                ) continue;
+                // if((thisMs-lastMs)>100) {
+                //     await new Promise<void>((resolve)=>{
+                //         requestAnimationFrame(addEntry(resolve));
+                //     });
+                //     lastMs = thisMs;
+                // } else {
+                //     await addEntry()();
+                // }
+                results++
+                const li = document.createElement('li');
+                li.classList.add("library-entry");
+                await this.generateSongDetails(entry,li);
+                this.elements.librarySearchOutput!.appendChild(li);
+            } finally {
+                // let thisMs = Date.now();
+                // if((thisMs-lastMs)>100) {
+                if(++count>32) {
+                    await new Promise<void>((resolve)=>{
+                        requestAnimationFrame(()=>resolve());
+                    });
+                    count = 0;
+                }
+                //     lastMs = thisMs;
+                // }
+            }
+        }
+        if(!results) {
+            this.elements.librarySearchOutput!.innerHTML="<li>No results!<br>Did you cache the library? Try clicking \"Cache all\".<br>More generally try using less strict filters, or less filters in general.</li>";
+        }
+        this.elements.librarySearchResultCount!.innerText = results+" result"+(results===1?"":"s");
+    }
+
     createData() {
         let D = this.elements.data!;
         D.value = "DOLLBOX:";
@@ -588,7 +902,7 @@ class BytebeatSystem {
     }
 
     initElements() {
-        this.getElementsById();
+        this.getElementsByIds();
         this.elements.samplerate!.addEventListener('change', () => {
             this.elements.samplerate!.value = Math.abs(+this.elements.samplerate!.value).toString(10);
             this.elements.samplerate!.value = isNaN(parseFloat(this.elements.samplerate!.value)) ? "8000" : this.elements.samplerate!.value;
@@ -671,7 +985,7 @@ class BytebeatSystem {
                     selection.classList.add("hide");
                 }
             }
-        })
+        });
 
         // Obsolete in Tauri
         // this.elements.loadButton!.addEventListener('click', async () => {
@@ -725,10 +1039,11 @@ class BytebeatSystem {
                                 const label = document.createElement('span');
                                 const songList = document.createElement('ul');
                                 for(let song of songs) {
-                                    this.libraryCache.set(this.currentLibrary+"-"+song.hash,song);
                                     const listEntry = document.createElement('li');
                                     listEntry.classList.add("library-entry");
                                     this.generateSongDetails(song,listEntry);
+                                    song.author = String(author.author); // account for some dollchan backend bugs
+                                    this.libraryCache.set(this.currentLibrary+"-"+song.hash,song);
                                     songList.appendChild(listEntry);
                                 }
                                 label.innerText=author.author||"<no author>";
@@ -762,9 +1077,154 @@ class BytebeatSystem {
                 }
             })
         }
+
+        this.elements.cacheAllLibraryEntriesButton!.addEventListener('click',()=>{
+            const lastText = this.elements.cacheAllLibraryEntriesButton!.innerText;
+            this.elements.cacheAllLibraryEntriesButton!.innerText = "Caching...";
+            let num = 0;
+            let timeout: number;
+            const tick=()=>{
+                timeout = setTimeout(tick,100) as unknown as number; // It's a number.
+                num = num+1&3;
+                this.elements.cacheAllLibraryEntriesButton!.innerText = "Wait! "+"|/-\\"[num]+"/-\\|"[num]+"-\\|/"[num];
+            }
+            tick();
+            this.cacheAllLibraryEntries().then(()=>{
+                this.elements.cacheAllLibraryEntriesButton!.innerText = lastText;
+            },(error)=>{
+                console.error(error);
+                this.elements.cacheAllLibraryEntriesButton!.innerText = "Error logged in console";
+            }).finally(()=>clearTimeout(timeout));
+        });
+
+        this.elements.startLibrarySearch!.addEventListener('click',()=>{
+            const lastText = this.elements.startLibrarySearch!.innerText;
+            this.elements.startLibrarySearch!.innerText = "!!";
+            let num = 0;
+            let timeout: number;
+            const tick=()=>{
+                timeout = setTimeout(tick,100) as unknown as number; // It's a number.
+                num = num+1&3;
+                this.elements.startLibrarySearch!.innerText = "|/-\\"[num]+"-/|\\"[num];
+            }
+            tick();
+            this.librarySearch().then(()=>{
+                this.elements.startLibrarySearch!.innerText = lastText;
+            },(error)=>{
+                console.error(error);
+                this.elements.startLibrarySearch!.innerText = "Error logged in console";
+            }).finally(()=>clearTimeout(timeout));
+        });
+
+        this.elements.libraryFilterAddButton!.addEventListener('click',()=>{
+            const filterType = this.elements.libraryFilterTypeSelect!.value as LibrarySearchFilter["type"];
+            const filterValue = this.elements.libraryFilterValue!.value;
+            switch(filterType) {
+                case 'name': case 'author': case 'description': case 'tags': {
+                    this.librarySearchFilters.push({
+                        type: filterType,
+                        value: filterValue
+                    });
+                } break;
+                case 'formpresent': case 'minpresent': case 'origpresent': {
+                    let v: boolean = false;
+                    switch(filterValue.toLowerCase()) {
+                        case 'yes': case 'true': case '1': case 'y': v = true; break;
+                        case 'no': case 'false': case '0': case 'n': break;
+                        default: this.alert("Please put yes or no into the box\n(or 1/0 or true/false or y/n whatever)"); return;
+                    }
+                    this.librarySearchFilters.push({
+                        type: filterType,
+                        value: v
+                    });
+                } break;
+                case 'samplerate':  case 'sizemin': case 'sizemax':
+                case 'sizeminmin': case 'sizemaxmin':
+                case 'sizeminform': case 'sizemaxform':
+                case 'sampleratemin': case 'sampleratemax': {
+                    let v: number = parseInt(filterValue);
+                    if(isNaN(v)) {
+                        this.alert("Please put in a number");
+                        return;
+                    }
+                    this.librarySearchFilters.push({
+                        type: filterType,
+                        value: v
+                    });
+                } break;
+
+                case 'mode': {
+                    let v: soundMode = soundMode.u8;
+                    switch(filterValue.toLowerCase().replace(/\W/g,'')) {
+                        case 'byte': case 'bytebeat': case 'u8': break;
+                        case 'signed': case 'singedbytebeat': case 's8': v = soundMode.i8; break;
+                        case 'float': case 'floatbeat': case 'f': v = soundMode.f; break;
+                        case 'ufunc': case 'ufuncbeat': case 'u8f': v = soundMode.u8f; break;
+                        case 'ifunc': case 'ifuncbeat': case 'i8f': v = soundMode.i8f; break;
+                        case 'func': case 'funcbeat': case 'ff': v = soundMode.ff; break;
+                        default: this.alert("Please put in a valid mode"); return;
+                    }
+                    this.librarySearchFilters.push({
+                        type: 'mode',
+                        value: v
+                    });
+                } break;
+               
+                case 'rating': {
+                    let v: starRating = starRating.none;
+                    switch(filterValue.toLowerCase().replace(/\W/g,'')) {
+                        case '0': case 'none': break;
+                        case '1': case 'star': v = starRating.star; break;
+                        case '2': case 'gold': case 'goldstar': case 'yellow':
+                        case 'yellowstar':
+                        case 'colorstar': case 'coloredstar': 
+                        case 'colourstar': case 'colouredstar': v = starRating.gold; break;
+                        default: this.alert("Please put in a valid rating"); return;
+                    }
+                    this.librarySearchFilters.push({
+                        type: 'rating',
+                        value: v
+                    });
+                } break;
+                default: this.alert("Unknown filter type "+filterType+"\nThis is a bug in DOLLBOX. Please report it to the dev(s).")
+            }
+            this.reloadFilterList();
+        });
+
+        addEventListener("error", (event) => {
+            console.error("Error handler",event.error);
+            const message = "UNCAUGHT ERROR\n\n"+((event.error instanceof Error)?(event.error.stack??(event.error.name+": "+event.error.message)):String(event.error))+
+                "\n\nAn error has occurred in DOLLBOX. Please report it to the dev(s).\nThere may be future errors.";
+            try {
+                this.alert(message);
+            } catch(error) {
+                console.error("Error occured in the alert() function. Falling back.", error)
+                window.alert(message+"\n\nAdditionally, the initial error handler failed:\n\n"+((error instanceof Error)?(error.stack??(error.name+": "+error.message)):String(error)));
+            }
+        });
+    }
+
+    reloadFilterList() {
+        this.elements.libraryFilters!.innerHTML = "<span>Filters:</span>";
+        for(let filterIdx = 0; filterIdx < this.librarySearchFilters.length; filterIdx++) {
+            const filter = this.librarySearchFilters[filterIdx];
+            const container = document.createElement('div');
+            container.classList.add("library-search-filter");
+            container.innerText = filter.type+": " + filter.value;
+            const button = document.createElement('button');
+            button.classList.add('control-button-2', 'library-search-filter-remove');
+            button.innerText = 'Remove';
+            button.addEventListener('click',()=>{
+                this.librarySearchFilters.splice(filterIdx,1);
+                this.reloadFilterList();
+            });
+            container.appendChild(button);
+            this.elements.libraryFilters!.appendChild(container);
+        }
     }
 
     cacheAllLibraryEntries() {
+        this.libraryCache.clear();
         return new Promise<void>((resolve,reject)=>{
             tauriFetch(libraryLinks[this.currentLibrary].all, { cache: 'no-cache' }).then(data => {
                 if (!data.ok) {
@@ -778,6 +1238,7 @@ class BytebeatSystem {
                         const author = _author as LibraryAuthor;
                         const { songs } = author;
                         for(const song of songs) {
+                            song.author = String(author.author); // account for some dollchan backend bugs
                             this.libraryCache.set(this.currentLibrary+"-"+song.hash,song);
                         }
                     }
@@ -929,4 +1390,14 @@ bytebeat.initAudio().then(()=>{
         document.addEventListener('DOMContentLoaded', afterDOM);
     } else afterDOM();
 });
+
+// @ts-ignore - console function
+globalThis.dumpLibraryCache = ()=>{
+    console.log(bytebeat.libraryCache);
+}
+
+// @ts-ignore - console function
+globalThis.dumpLibraryFilters = ()=>{
+    console.log(bytebeat.librarySearchFilters);
+}
 
